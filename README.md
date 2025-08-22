@@ -65,7 +65,5 @@ Built with **Tailwind CSS**, **JavaScript**, and a lightweight PHP backend.
 ## Notes
 
 - `settings.json` is created automatically when saving settings.  
-- Do **not** commit `settings.json` to GitHub if it contains your API key — add it to `.gitignore`.  
-- Safe to publish `index.html` and `browser.php` without credentials.
 
 ---
