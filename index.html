@@ -1,0 +1,1068 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Localhost Dashboard</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- SortableJS for drag-and-drop in settings -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+    
+    <!-- Favicon: Prevents console errors -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚀</text></svg>">
+    
+    <style>
+        /* Use Inter font family */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Custom animation for cards appearing */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Apply animation to cards */
+        .card-animated {
+            animation: fadeInUp 0.5s ease-out forwards;
+            opacity: 0; /* Start hidden */
+        }
+
+        /* Custom scrollbar for a cleaner look */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background-color: rgba(156, 163, 175, 0.5); /* gray-400 with opacity */
+            border-radius: 20px;
+            border: 3px solid transparent;
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background-color: rgba(75, 85, 99, 0.5); /* gray-600 with opacity */
+        }
+
+        /* Styles for SortableJS drag-and-drop placeholders */
+        .sortable-ghost {
+            background: rgba(59, 130, 246, 0.1); /* blue-500 with opacity */
+            border: 2px dashed rgba(59, 130, 246, 0.5);
+            opacity: 0.7;
+        }
+        .sortable-chosen {
+            cursor: grabbing;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 transition-colors duration-300">
+
+    <!-- Main Application Container -->
+    <div id="app-container" class="min-h-screen">
+        
+        <!-- Header -->
+        <header class="sticky top-0 z-30 backdrop-blur-lg bg-slate-50/80 dark:bg-slate-900/80 border-b border-slate-200 dark:border-slate-800">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex items-center justify-between h-20">
+                    <!-- Title -->
+                    <div class="flex items-center gap-4">
+                        <img src="/images/me.png" alt="Logo" class="w-10 h-10 rounded-full object-cover">
+                        <h1 class="text-2xl font-bold text-slate-900 dark:text-white">
+                            web.<span class="text-blue-500">server</span>
+                        </h1>
+                    </div>
+                    <!-- Settings Button -->
+                    <button id="settings-button" onclick="openSettings()" class="p-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors" title="Settings">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content: Website Grid -->
+        <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-10">
+            <div id="websites-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <!-- Website cards will be injected here by JavaScript -->
+            </div>
+        </main>
+    </div>
+    
+    <!-- Modal Container -->
+    <div id="modal-container" class="hidden"></div>
+    
+    <!-- Gemini Chatbot FAB -->
+    <button onclick="openChatbot()" class="fixed bottom-6 right-6 bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 transition-all duration-300 transform hover:scale-110 z-40">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
+            <path d="M2.678 11.894a1 1 0 0 1 .287.801 10.97 10.97 0 0 1-.398 2c1.395-.323 2.247-.697 2.634-.893a1 1 0 0 1 .71-.074A8.06 8.06 0 0 0 8 14c3.996 0 7-2.582 7-5.5S11.996 3 8 3 1 5.582 1 8.5c0 .642.172 1.254.46 1.824a1 1 0 0 1-.287.801zm2.111 2.262s.11.084.242.155a1.96 1.96 0 0 0 .585.255c.13.049.208.095.25.111a.43.43 0 0 0 .229.02.5.5 0 0 0 .22-.15.65.65 0 0 0 .11-.392c-.035-.335-.11-.83-.254-1.433a1 1 0 0 0-1.03-.806c-.35.065-.58.27-.64.43a1 1 0 0 0 .125 1.02z"/>
+        </svg>
+    </button>
+
+    <script>
+        // --- Global State ---
+        let allSettings = {};
+        let chatHistory = [];
+
+        // --- Utility Functions ---
+
+        /**
+         * Fetches data from the backend PHP script.
+         * @param {string} params - The query parameters for the request.
+         * @returns {Promise<any>} - The JSON response from the backend.
+         */
+        async function fetchFromBackend(params) {
+            try {
+                const response = await fetch(`browser.php?${params}`);
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                return await response.json();
+            } catch (error) {
+                console.error('Error fetching from backend:', error);
+                return { error: error.message };
+            }
+        }
+
+        /**
+         * Closes any open modal.
+         */
+        function closeModal() {
+            const modalContainer = document.getElementById('modal-container');
+            const modal = modalContainer.querySelector('.modal-content');
+            if (modal) {
+                modal.classList.add('animate-fadeOut');
+                modal.parentElement.classList.add('animate-fadeOut');
+                setTimeout(() => {
+                    modalContainer.innerHTML = '';
+                    modalContainer.classList.add('hidden');
+                }, 300); // Match animation duration
+            }
+        }
+
+        // --- Theme Management ---
+
+        /**
+         * Applies the theme (dark/light) to the document.
+         * @param {string} theme - 'dark' or 'light'.
+         */
+        function applyTheme(theme) {
+            const html = document.documentElement;
+            if (theme === 'dark') {
+                html.classList.add('dark');
+            } else {
+                html.classList.remove('dark');
+            }
+            allSettings.theme = theme;
+        }
+
+        /**
+         * Toggles the current theme.
+         */
+        function toggleTheme() {
+            const currentTheme = document.documentElement.classList.contains('dark') ? 'light' : 'dark';
+            applyTheme(currentTheme);
+            saveThemeSetting();
+        }
+
+        /**
+         * Saves the current theme preference to the server.
+         */
+        async function saveThemeSetting() {
+             try {
+                await fetch('browser.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'save_settings', settings: allSettings })
+                });
+            } catch (error) {
+                console.error('Error saving theme setting:', error);
+            }
+        }
+
+        // --- Settings Modal ---
+
+        /**
+         * Moves a settings item to the top of the list.
+         * @param {HTMLElement} button - The button element that was clicked.
+         */
+        function moveToTop(button) {
+            const item = button.closest('.settings-item');
+            if (item) {
+                item.parentElement.prepend(item);
+            }
+        }
+
+        /**
+         * Moves a settings item to the bottom of the list.
+         * @param {HTMLElement} button - The button element that was clicked.
+         */
+        function moveToBottom(button) {
+            const item = button.closest('.settings-item');
+            if (item) {
+                item.parentElement.appendChild(item);
+            }
+        }
+
+        /**
+         * Resets sorting to alphabetical and unhides all folders.
+         */
+        function restoreDefaultSettings() {
+            allSettings.websitesOrder = []; // Clear custom order
+            if (allSettings.websites) {
+                for (const siteName in allSettings.websites) {
+                    if (allSettings.websites.hasOwnProperty(siteName)) {
+                        allSettings.websites[siteName].isHidden = false;
+                    }
+                }
+            }
+            // Re-render the settings panel to show the changes immediately
+            loadWebsiteSettingsPanel();
+        }
+
+        /**
+         * Opens the settings modal.
+         */
+        function openSettings() {
+            const modalContainer = document.getElementById('modal-container');
+            modalContainer.classList.remove('hidden');
+            modalContainer.innerHTML = `
+                <div class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn">
+                    <div id="settingsModal" class="modal-content bg-white dark:bg-slate-800 rounded-lg shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col animate-scaleIn">
+                        <!-- Modal Header -->
+                        <div class="flex justify-between items-center p-5 border-b border-slate-200 dark:border-slate-700">
+                            <h2 class="text-xl font-semibold text-slate-900 dark:text-white">Dashboard Settings</h2>
+                            <button class="text-slate-500 hover:text-blue-500 transition-colors" onclick="closeModal()">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                            </button>
+                        </div>
+                        
+                        <!-- Modal Tabs -->
+                        <div class="flex border-b border-slate-200 dark:border-slate-700 px-6">
+                            <button class="py-3 px-4 font-medium text-sm border-b-2 border-blue-500 text-blue-500" onclick="switchSettingsTab('websites', this)">Websites</button>
+                            <button class="py-3 px-4 font-medium text-sm border-b-2 border-transparent text-slate-500 hover:text-blue-500" onclick="switchSettingsTab('general', this)">General</button>
+                            <button class="py-3 px-4 font-medium text-sm border-b-2 border-transparent text-slate-500 hover:text-blue-500" onclick="switchSettingsTab('backup', this)">Backup</button>
+                        </div>
+
+                        <!-- Modal Body -->
+                        <div id="websitesSettings" class="settings-tab-content flex-grow overflow-y-auto p-6 space-y-4">
+                             <div class="p-4 bg-slate-100 dark:bg-slate-700/50 rounded-lg">
+                                <h3 class="font-semibold mb-2 text-slate-800 dark:text-slate-200">AI Actions</h3>
+                                <p class="text-sm text-slate-600 dark:text-slate-400 mb-4">Automatically scan all project folders to generate descriptions and technology tags using AI.</p>
+                                <button id="summarize-all-btn" onclick="summarizeAllProjects()" class="w-full px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-md">
+                                    Summarize All Projects
+                                </button>
+                            </div>
+                            <div id="website-list-container">
+                                <!-- Website list will be loaded here -->
+                            </div>
+                        </div>
+                        <div id="generalSettings" class="settings-tab-content flex-grow overflow-y-auto p-6 space-y-4 hidden">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Gemini API Key</label>
+                                <input type="password" id="geminiApiKey" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" value="${allSettings.geminiApiKey || ''}" placeholder="Enter your Gemini API Key">
+                                <p class="text-xs text-slate-500 mt-1">Your key is stored in your browser's local storage and also saved to settings.json on your server.</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Custom Chatbot Context</label>
+                                <textarea id="chatbotContext" class="w-full h-32 px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Provide any additional context for the chatbot here...">${allSettings.chatbotContext || ''}</textarea>
+                                <p class="text-xs text-slate-500 mt-1">The chatbot automatically reads context from <strong>server-info.html</strong> and <strong>filesystem.txt</strong> in your root directory, if they exist.</p>
+                            </div>
+                        </div>
+                        <div id="backupSettings" class="settings-tab-content flex-grow overflow-y-auto p-6 space-y-4 hidden">
+                             <div class="p-4 bg-slate-100 dark:bg-slate-700/50 rounded-lg">
+                                <h3 class="font-semibold mb-2 text-slate-800 dark:text-slate-200">Project Backup</h3>
+                                <p class="text-sm text-slate-600 dark:text-slate-400 mb-4">Create a .zip archive of all your project folders. This does not include server configuration files or hidden directories.</p>
+                                <button id="backup-all-btn" onclick="backupAllProjects()" class="w-full px-4 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors shadow-md">
+                                    Create & Download Backup
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Modal Footer -->
+                        <div class="flex justify-between items-center p-5 border-t border-slate-200 dark:border-slate-700">
+                             <div class="flex gap-4">
+                                <button class="px-4 py-2 text-sm font-medium rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors" onclick="toggleTheme()">Toggle Theme</button>
+                                <button class="px-4 py-2 text-sm font-medium rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors" onclick="restoreDefaultSettings()">Restore Defaults</button>
+                             </div>
+                             <button class="px-5 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-md" onclick="saveAllSettings()">Save and Close</button>
+                        </div>
+                    </div>
+                </div>`;
+            
+            // Close modal if backdrop is clicked
+            modalContainer.querySelector('.fixed').addEventListener('click', (e) => {
+                if (e.target === e.currentTarget) closeModal();
+            });
+            
+            loadWebsiteSettingsPanel();
+        }
+        
+        function switchSettingsTab(tabName, button) {
+            document.querySelectorAll('.settings-tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`${tabName}Settings`).classList.remove('hidden');
+            document.querySelectorAll('.flex.border-b button').forEach(btn => {
+                btn.classList.remove('border-blue-500', 'text-blue-500');
+                btn.classList.add('border-transparent', 'text-slate-500', 'hover:text-blue-500');
+            });
+            button.classList.add('border-blue-500', 'text-blue-500');
+            button.classList.remove('border-transparent', 'text-slate-500', 'hover:text-blue-500');
+        }
+
+        /**
+         * Loads the website settings into the modal panel.
+         */
+        async function loadWebsiteSettingsPanel() {
+            const container = document.getElementById('website-list-container');
+            if (!container) return;
+            container.innerHTML = '<div class="text-slate-500 dark:text-slate-400">Loading websites...</div>';
+            try {
+                const items = await fetchFromBackend('action=list&path=/');
+                if (items && !items.error) {
+                    const siteFolders = items.filter(item => item.type === 'folder' && !['.', '..', 'phpmyadmin', 'images'].includes(item.name));
+                    const sortedFolders = getSortedWebsites(siteFolders);
+                    container.innerHTML = sortedFolders.map(item => {
+                        const siteSettings = allSettings.websites[item.name] || {};
+                        return `
+                        <div class="settings-item bg-slate-50 dark:bg-slate-700/50 rounded-lg p-4 mt-4" data-name="${item.name}">
+                            <div class="flex items-center gap-3 mb-4">
+                                <span class="handle cursor-grab text-slate-400 hover:text-blue-500">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M7 2a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 5a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 8a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm-3 3a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/></svg>
+                                </span>
+                                <div class="flex flex-col">
+                                    <button onclick="moveToTop(this)" title="Move to Top" class="p-1 text-slate-400 hover:text-blue-500"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8 15a.5.5 0 0 0 .5-.5V2.707l3.146 3.147a.5.5 0 0 0 .708-.708l-4-4a.5.5 0 0 0-.708 0l-4 4a.5.5 0 1 0 .708.708L7.5 2.707V14.5a.5.5 0 0 0 .5.5z"/></svg></button>
+                                    <button onclick="moveToBottom(this)" title="Move to Bottom" class="p-1 text-slate-400 hover:text-blue-500"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8 1a.5.5 0 0 1 .5.5v11.793l3.146-3.147a.5.5 0 0 1 .708.708l-4 4a.5.5 0 0 1-.708 0l-4-4a.5.5 0 0 1 .708-.708L7.5 13.293V1.5A.5.5 0 0 1 8 1z"/></svg></button>
+                                </div>
+                                <h4 class="font-medium text-slate-900 dark:text-white flex-grow">${item.name}</h4>
+                            </div>
+                            <div class="space-y-4 pl-8">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Display Name</label><input type="text" data-key="displayName" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" value="${siteSettings.displayName || item.name}"></div>
+                                    <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Logo Path</label><input type="text" data-key="logoPath" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" value="${siteSettings.logoPath || ''}" placeholder="/${item.name}/logo.png"></div>
+                                </div>
+                                <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Description</label><textarea data-key="description" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">${siteSettings.description || ''}</textarea></div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">External Link URL</label><input type="url" data-key="externalLink" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" value="${siteSettings.externalLink || ''}" placeholder="https://example.com"></div>
+                                    <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">External Link Title</label><input type="text" data-key="externalLinkTitle" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" value="${siteSettings.externalLinkTitle || ''}" placeholder="Visit Live Site"></div>
+                                </div>
+                                <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">GitHub Repo URL</label><input type="url" data-key="githubLink" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" value="${siteSettings.githubLink || ''}" placeholder="https://github.com/user/repo"></div>
+                                <div class="pt-2 flex items-center justify-between">
+                                    <label class="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
+                                        <input type="checkbox" data-key="showInternalLink" class="rounded" ${siteSettings.showInternalLink !== false ? 'checked' : ''}>
+                                        Show internal link button
+                                    </label>
+                                    <label class="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
+                                        <input type="checkbox" data-key="isHidden" class="rounded" ${siteSettings.isHidden ? 'checked' : ''}>
+                                        Hide this folder
+                                    </label>
+                                </div>
+                            </div>
+                        </div>`;
+                    }).join('');
+                    // Initialize SortableJS
+                    new Sortable(container, { handle: '.handle', animation: 150 });
+                } else {
+                    container.innerHTML = `<div class="text-red-500">Error loading websites: ${items.error || 'Unknown error'}</div>`;
+                }
+            } catch (error) {
+                console.error('Error loading website settings:', error);
+                container.innerHTML = `<div class="text-red-500">Error loading websites: ${error.message}</div>`;
+            }
+        }
+        
+        /**
+         * Saves all settings from the modal to the server.
+         */
+        async function saveAllSettings() {
+            const newSettings = {
+                websites: {},
+                websitesOrder: [],
+                theme: allSettings.theme,
+                geminiApiKey: document.getElementById('geminiApiKey')?.value || '',
+                chatbotContext: document.getElementById('chatbotContext')?.value || ''
+            };
+
+            localStorage.setItem('geminiApiKey', newSettings.geminiApiKey);
+
+            document.querySelectorAll('#website-list-container > .settings-item').forEach(div => {
+                const name = div.dataset.name;
+                newSettings.websitesOrder.push(name);
+                if (!newSettings.websites[name]) {
+                    newSettings.websites[name] = {};
+                }
+                div.querySelectorAll('input, textarea').forEach(input => {
+                    const key = input.dataset.key;
+                    const value = input.type === 'checkbox' ? input.checked : input.value;
+                    newSettings.websites[name][key] = value;
+                });
+            });
+
+            try {
+                console.log("Saving settings:", newSettings);
+                const response = await fetch('browser.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'save_settings', settings: newSettings })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    closeModal();
+                    location.reload();
+                } else {
+                    console.error('Failed to save settings:', result.error || 'Unknown error');
+                }
+            } catch (error) {
+                console.error('Error saving settings:', error.message);
+            }
+        }
+
+        // --- Core Application Logic ---
+
+        /**
+         * Sorts website folders based on the saved order.
+         * @param {Array} siteFolders - Array of folder objects from the backend.
+         * @returns {Array} - The sorted array of folder objects.
+         */
+        function getSortedWebsites(siteFolders) {
+            const order = allSettings.websitesOrder || [];
+            const sortedSiteFolders = [...siteFolders].sort((a, b) => a.name.localeCompare(b.name));
+
+            return sortedSiteFolders.sort((a, b) => {
+                const indexA = order.indexOf(a.name);
+                const indexB = order.indexOf(b.name);
+                
+                if (indexA > -1 && indexB > -1) {
+                    return indexA - indexB;
+                }
+                if (indexA > -1) {
+                    return -1;
+                }
+                if (indexB > -1) {
+                    return 1;
+                }
+                return 0; 
+            });
+        }
+        
+        /**
+         * Creates an HTML card element for a website.
+         * @param {object} siteData - The data for the website.
+         * @param {number} index - The index of the card for animation delay.
+         * @returns {HTMLElement} - The card element.
+         */
+        function createWebsiteCard(siteData, index) {
+            const card = document.createElement('div');
+            card.className = 'card-animated bg-white dark:bg-slate-800/50 p-6 rounded-xl hover:scale-105 border border-slate-200 dark:border-slate-800 hover:border-blue-500 dark:hover:border-blue-500 transition-all duration-300 flex flex-col';
+            card.style.animationDelay = `${index * 50}ms`;
+            card.id = `card-${siteData.name}`;
+
+            const siteSettings = allSettings.websites[siteData.name] || {};
+            const displayName = siteSettings.displayName || siteData.name;
+            const description = siteSettings.description || 'A local development project.';
+            const tags = siteSettings.tags || [];
+
+            // --- Logo Logic ---
+            const logoSrc = siteSettings.logoPath || `/${siteData.name}/logo.png`;
+            const placeholderHtml = `<div class='w-24 h-24 rounded-full flex items-center justify-center overflow-hidden bg-slate-100 dark:bg-slate-700'><span class='text-4xl font-bold text-slate-500'>${displayName.charAt(0).toUpperCase()}</span></div>`;
+            const logoContainerHtml = `
+                <div class="w-24 h-24 mb-4 flex items-center justify-center">
+                    <img src="${logoSrc}" alt="${displayName} Logo" class="max-w-full max-h-full object-contain" 
+                         onerror="this.parentElement.innerHTML = '${placeholderHtml}'">
+                </div>`;
+            
+            // --- Tags Logic ---
+            const tagsHtml = tags.length > 0 ? `
+                <div class="flex flex-wrap justify-center gap-2 mt-2">
+                    ${tags.map(tag => `<span class="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full dark:bg-blue-900 dark:text-blue-300">${tag}</span>`).join('')}
+                </div>` : '';
+
+            // --- Button Logic ---
+            const showInternal = siteSettings.showInternalLink !== false;
+            const externalLink = siteSettings.externalLink;
+            const externalTitle = siteSettings.externalLinkTitle || 'Visit Link';
+            const githubLink = siteSettings.githubLink;
+            let buttonsHtml = '';
+            let mainButtonHtml = '';
+            let iconButtonsHtml = '';
+
+            if (externalLink) {
+                 mainButtonHtml = `<a href="${externalLink}" target="_blank" class="flex-1 block text-center px-4 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-all duration-200">${externalTitle}</a>`;
+            } else if (showInternal) {
+                 mainButtonHtml = `<a href="/${siteData.name}/" target="_blank" class="flex-1 block text-center px-4 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-all duration-200">Visit Local</a>`;
+            }
+
+            if (externalLink && showInternal) {
+                iconButtonsHtml += `<a href="/${siteData.name}/" target="_blank" title="Visit Local" class="p-3 bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 hover:bg-slate-300 dark:hover:bg-slate-600 rounded-lg transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                </a>`;
+            }
+            if (githubLink) {
+                iconButtonsHtml += `<a href="${githubLink}" target="_blank" title="View on GitHub" class="p-3 bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 hover:bg-slate-300 dark:hover:bg-slate-600 rounded-lg transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+                </a>`;
+            }
+
+            buttonsHtml = mainButtonHtml;
+            if (iconButtonsHtml) {
+                buttonsHtml += `<div class="flex items-center gap-2">${iconButtonsHtml}</div>`;
+            }
+
+            let footerHtml = '';
+            if (buttonsHtml) {
+                footerHtml = `<div class="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+                                <div class="flex items-center gap-3">${buttonsHtml}</div>
+                              </div>`;
+            }
+            
+            // --- AI Features Buttons ---
+            const aiFeaturesHtml = `
+                <div class="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row gap-2">
+                    <button onclick="openCodebaseChat('${siteData.name}')" class="w-full text-sm px-3 py-2 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 rounded-lg transition-colors flex items-center justify-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.5a1 1 0 0 0-.8.4l-1.9 2.533a1 1 0 0 1-1.6 0L5.3 12.4a1 1 0 0 0-.8-.4H2a2 2 0 0 1-2-2V2zm3.5 1a.5.5 0 0 0 0 1h9a.5.5 0 0 0 0-1h-9zm0 2.5a.5.5 0 0 0 0 1h9a.5.5 0 0 0 0-1h-9zm0 2.5a.5.5 0 0 0 0 1h5a.5.5 0 0 0 0-1h-5z"/></svg>
+                        Ask Codebase
+                    </button>
+                </div>
+            `;
+
+            card.innerHTML = `
+                <div class="flex-grow flex flex-col items-center text-center">
+                    ${logoContainerHtml}
+                    <h3 class="text-xl font-bold text-slate-900 dark:text-white">${displayName}</h3>
+                    <p class="text-sm text-slate-500 dark:text-slate-400 mt-2 h-10">${description}</p>
+                    ${tagsHtml}
+                </div>
+                ${aiFeaturesHtml}
+                ${footerHtml}`;
+            return card;
+        }
+
+        /**
+         * Renders the main page content.
+         */
+        async function renderPage() {
+            const websitesGrid = document.getElementById('websites-grid');
+            if (!websitesGrid) return;
+
+            websitesGrid.innerHTML = '<p class="text-slate-500 dark:text-slate-400 col-span-full">Loading projects...</p>';
+            try {
+                const items = await fetchFromBackend('action=list&path=/');
+                if (items && !items.error) {
+                    const siteFolders = items.filter(item => {
+                        const settings = allSettings.websites && allSettings.websites[item.name];
+                        const isHidden = settings && settings.isHidden;
+                        const isExcluded = ['.', '..', 'phpmyadmin', 'images'].includes(item.name);
+                        return item.type === 'folder' && !isHidden && !isExcluded;
+                    });
+                    
+                    const sortedFolders = getSortedWebsites(siteFolders);
+                    
+                    websitesGrid.innerHTML = ''; // Clear loading message
+                    
+                    if (sortedFolders.length === 0) {
+                        websitesGrid.innerHTML = '<p class="text-slate-500 dark:text-slate-400 col-span-full text-center py-10">No website folders found or all are hidden.</p>';
+                    } else {
+                        sortedFolders.forEach((folder, index) => {
+                            websitesGrid.appendChild(createWebsiteCard({ name: folder.name }, index));
+                        });
+                    }
+                } else {
+                    websitesGrid.innerHTML = `<p class="text-red-500 col-span-full">Could not load websites. Please ensure your backend is running.</p>`;
+                }
+            } catch (e) {
+                websitesGrid.innerHTML = `<p class='text-red-500 font-bold col-span-full'>Error loading websites: ${e.message}</p>`;
+            }
+        }
+        
+        // --- Gemini Chatbot & AI Features ---
+
+        async function openCodebaseChat(projectName) {
+            openChatbot(projectName);
+        }
+
+        async function openChatbot(projectName = null) {
+            const modalContainer = document.getElementById('modal-container');
+            modalContainer.classList.remove('hidden');
+            const title = projectName ? `Code Assistant: '${projectName}'` : 'Server Assistant';
+            
+            let modalHtml = `
+                <div class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end justify-center sm:items-center z-50 animate-fadeIn" onclick="if (event.target === this) closeModal()">
+                    <div class="modal-content bg-white dark:bg-slate-800 rounded-t-lg sm:rounded-lg shadow-2xl w-full max-w-4xl h-[85vh] flex flex-col animate-scaleIn">
+                        <div class="flex justify-between items-center p-4 border-b border-slate-200 dark:border-slate-700">
+                            <h2 class="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.5a1 1 0 0 0-.8.4l-1.9 2.533a1 1 0 0 1-1.6 0L5.3 12.4a1 1 0 0 0-.8-.4H2a2 2 0 0 1-2-2V2zm3.5 1a.5.5 0 0 0 0 1h9a.5.5 0 0 0 0-1h-9zm0 2.5a.5.5 0 0 0 0 1h9a.5.5 0 0 0 0-1h-9zm0 2.5a.5.5 0 0 0 0 1h5a.5.5 0 0 0 0-1h-5z"/></svg>
+                                ${title}
+                            </h2>
+                            <button class="text-slate-500 hover:text-blue-500 transition-colors" onclick="closeModal()"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+                        </div>
+                        <div class="flex-grow flex overflow-hidden">
+                            ${projectName ? `
+                            <div class="w-1/3 border-r border-slate-200 dark:border-slate-700 overflow-y-auto p-2">
+                                <div id="file-browser" class="text-sm">Loading files...</div>
+                            </div>
+                            <div id="code-chat-view" class="w-2/3 flex flex-col">
+                                <div id="file-content-view" class="flex-grow p-4 overflow-y-auto bg-slate-50 dark:bg-slate-900">
+                                    <p class="text-slate-500">Select a file to view its content or ask a question about the project below.</p>
+                                </div>
+                                <div id="refactor-button-container" class="p-2 border-t border-slate-200 dark:border-slate-700 hidden">
+                                    <button id="refactor-btn" class="w-full px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors shadow-md">Analyze & Refactor File</button>
+                                </div>
+                            ` : `
+                            <div id="code-chat-view" class="w-full flex flex-col">
+                            `}
+                                <div id="chat-messages" class="flex-grow overflow-y-auto p-4 space-y-4"></div>
+                                <div class="p-4 border-t border-slate-200 dark:border-slate-700">
+                                    <form id="chat-form" class="flex items-center gap-3">
+                                        <input type="text" id="chat-input" class="flex-grow px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Ask about your server...">
+                                        <button type="submit" class="p-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M15.854.146a.5.5 0 0 1 .11.54l-5.819 14.547a.75.75 0 0 1-1.329.124l-3.178-4.995L.643 7.184a.75.75 0 0 1 .124-1.33L15.314.037a.5.5 0 0 1 .54.11zM6.636 10.07l2.761 4.338L14.13 2.576 6.636 10.07zm6.787-8.201L1.591 6.602l4.339 2.76 7.494-7.493z"/></svg>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+            
+            modalContainer.innerHTML = modalHtml;
+            chatHistory = [];
+            renderChatHistory();
+            
+            if (projectName) {
+                loadProjectFiles(projectName);
+            }
+
+            document.getElementById('chat-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                sendMessageToGemini(projectName);
+            });
+        }
+
+        function renderChatHistory() {
+            const messagesContainer = document.getElementById('chat-messages');
+            if (!messagesContainer) return;
+
+            messagesContainer.innerHTML = '';
+            chatHistory.forEach(msg => {
+                const messageEl = document.createElement('div');
+                if (msg.role === 'user') {
+                    messageEl.className = 'flex justify-end';
+                    messageEl.innerHTML = `<div class="bg-blue-500 text-white p-3 rounded-lg max-w-xs sm:max-w-md">${msg.parts[0].text}</div>`;
+                } else {
+                    messageEl.className = 'flex justify-start';
+                    messageEl.innerHTML = `<div class="bg-slate-200 dark:bg-slate-700 p-3 rounded-lg max-w-xs sm:max-w-md">${msg.parts[0].text}</div>`;
+                }
+                messagesContainer.appendChild(messageEl);
+            });
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        async function sendMessageToGemini(projectName = null) {
+            const input = document.getElementById('chat-input');
+            const userInput = input.value.trim();
+            if (!userInput) return;
+
+            const apiKey = allSettings.geminiApiKey;
+            if (!apiKey) {
+                alert('Please set your Gemini API Key in the settings first.');
+                return;
+            }
+
+            chatHistory.push({ role: "user", parts: [{ text: userInput }] });
+            renderChatHistory();
+            input.value = '';
+
+            const messagesContainer = document.getElementById('chat-messages');
+            const loadingEl = document.createElement('div');
+            loadingEl.className = 'flex justify-start';
+            loadingEl.innerHTML = `<div class="bg-slate-200 dark:bg-slate-700 p-3 rounded-lg"><span class="animate-pulse">...</span></div>`;
+            messagesContainer.appendChild(loadingEl);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            
+            const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
+            
+            let systemPrompt = '';
+
+            if (projectName) {
+                let projectContext = `Could not fetch context for project ${projectName}.`;
+                try {
+                    const { fileList, fileContents } = await getProjectContext(projectName);
+                    let contentSection = `The contents of the key files could not be read from the server. Please ask the user to provide the file content if you need it.`;
+                    if (fileContents && fileContents.trim() !== '') {
+                        contentSection = `Here are the contents of some of the key files:\n${fileContents}`;
+                    }
+                    projectContext = `Here is the file structure for the project '${projectName}':\n${fileList}\n\n${contentSection}`;
+                } catch (e) { 
+                    console.error(`Could not fetch context for ${projectName}.`, e); 
+                }
+                systemPrompt = `You are a helpful code assistant. You are answering questions about a specific project named '${projectName}'.\n\n${projectContext}\n\nAnswer the user's questions based on this file structure and content.`;
+            } else {
+                let fileList = 'No project folder list available.';
+                try {
+                    const items = await fetchFromBackend('action=list&path=/');
+                    if (items && !items.error) {
+                        fileList = "Here is a list of project folders on the server:\n - " + items.map(i => i.name).join('\n - ');
+                    }
+                } catch (e) { console.error("Could not fetch file list for chatbot context."); }
+
+                const baseContext = "You are a helpful server assistant.";
+                const customContext = allSettings.chatbotContext || "No additional context provided.";
+                systemPrompt = `${baseContext}\n\n${fileList}\n\nAdditional user-provided context:\n${customContext}`;
+            }
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: chatHistory,
+                        systemInstruction: {
+                            parts: [{ text: systemPrompt }]
+                        }
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API Error: ${response.status} ${response.statusText}`);
+                }
+
+                const result = await response.json();
+                const botResponse = result.candidates[0].content.parts[0].text;
+                chatHistory.push({ role: "model", parts: [{ text: botResponse }] });
+                
+            } catch (error) {
+                console.error('Gemini API Error:', error);
+                chatHistory.push({ role: "model", parts: [{ text: `Sorry, I encountered an error: ${error.message}` }] });
+            } finally {
+                loadingEl.remove();
+                renderChatHistory();
+            }
+        }
+
+        async function loadProjectFiles(projectName) {
+            const fileBrowser = document.getElementById('file-browser');
+            try {
+                const files = await fetchFromBackend(`action=list_recursive&path=/${projectName}/`);
+                if (files.error) throw new Error(files.error);
+                
+                fileBrowser.innerHTML = files.map(file => `
+                    <div class="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-md cursor-pointer" onclick="loadFileContent('${projectName}', '${file.name}')">
+                        ${file.name}
+                    </div>
+                `).join('');
+            } catch (error) {
+                fileBrowser.innerHTML = `<p class="text-red-500 p-2">Error loading files: ${error.message}</p>`;
+            }
+        }
+        
+        async function loadFileContent(projectName, filePath) {
+            const fileContentDiv = document.getElementById('file-content-view');
+            const refactorContainer = document.getElementById('refactor-button-container');
+            fileContentDiv.innerHTML = `<p class="text-slate-500 animate-pulse">Loading ${filePath}...</p>`;
+            refactorContainer.classList.add('hidden');
+            
+            try {
+                const fullPath = `${projectName}/${filePath}`;
+                const result = await fetchFromBackend(`action=get_content&path=${encodeURIComponent(fullPath)}`);
+                if (result.error) throw new Error(result.error);
+                
+                fileContentDiv.innerHTML = `<pre class="text-sm whitespace-pre-wrap"><code>${escapeHtml(result.content)}</code></pre>`;
+                refactorContainer.classList.remove('hidden');
+                document.getElementById('refactor-btn').onclick = () => initiateRefactoring(projectName, filePath, result.content);
+
+            } catch (error) {
+                fileContentDiv.innerHTML = `<p class="text-red-500">Error loading file: ${error.message}</p>`;
+            }
+        }
+        
+        function escapeHtml(unsafe) {
+            return unsafe
+                 .replace(/&/g, "&amp;")
+                 .replace(/</g, "&lt;")
+                 .replace(/>/g, "&gt;")
+                 .replace(/"/g, "&quot;")
+                 .replace(/'/g, "&#039;");
+        }
+        
+        async function initiateRefactoring(projectName, filePath, originalContent) {
+            const apiKey = allSettings.geminiApiKey;
+            if (!apiKey) {
+                alert('Please set your Gemini API Key in the settings first.');
+                return;
+            }
+
+            const btn = document.getElementById('refactor-btn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="animate-pulse">Analyzing...</span>';
+
+            const truncatedContent = originalContent.substring(0, 8000);
+
+            const prompt = `
+                You are an expert programmer performing a code review. Analyze the following code from the file "${filePath}" within the project "${projectName}".
+                The code may be truncated for brevity.
+                Identify areas for improvement in terms of clarity, efficiency, and best practices.
+                
+                Return a JSON object with three keys:
+                1. "refactored_code": The full code block, refactored with your suggested improvements. If the code was truncated, refactor only the provided portion.
+                2. "explanation": A concise, bulleted list (in Markdown) explaining the key changes you made and why they are improvements.
+                3. "is_refactored": A boolean value indicating if you made any changes (true) or if the code was already optimal (false).
+
+                Original Code:
+                \`\`\`
+                ${truncatedContent}
+                \`\`\`
+            `;
+
+            try {
+                const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: prompt }] }],
+                        generationConfig: { responseMimeType: "application/json" }
+                    })
+                });
+
+                if (!response.ok) throw new Error(`API Error: ${response.status}`);
+                
+                const result = await response.json();
+                
+                try {
+                    const rawText = result.candidates[0].content.parts[0].text;
+                    const jsonStart = rawText.indexOf('{');
+                    const jsonEnd = rawText.lastIndexOf('}');
+                    if (jsonStart === -1 || jsonEnd === -1) {
+                        throw new Error("No valid JSON object found in the AI response.");
+                    }
+                    const jsonString = rawText.substring(jsonStart, jsonEnd + 1);
+                    const refactorData = JSON.parse(jsonString);
+                    displayRefactorModal(truncatedContent, refactorData.refactored_code, refactorData.explanation, refactorData.is_refactored);
+                } catch (parseError) {
+                    console.error("Failed to parse AI response as JSON:", parseError);
+                    console.log("Raw AI Response:", result.candidates[0].content.parts[0].text);
+                    alert("The AI returned a response that could not be read. Please check the console for more details.");
+                }
+
+            } catch (error) {
+                alert(`An error occurred during refactoring: ${error.message}`);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = 'Analyze & Refactor File';
+            }
+        }
+
+        function displayRefactorModal(originalCode, refactoredCode, explanation, isRefactored) {
+            const modalContainer = document.getElementById('modal-container');
+            modalContainer.classList.remove('hidden'); // Ensure it's visible
+            
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn';
+            modal.innerHTML = `
+                <div class="modal-content bg-white dark:bg-slate-800 rounded-lg shadow-2xl w-full max-w-6xl h-[90vh] flex flex-col animate-scaleIn">
+                    <div class="flex justify-between items-center p-4 border-b border-slate-200 dark:border-slate-700">
+                        <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Refactoring Suggestions</h2>
+                        <button class="text-slate-500 hover:text-blue-500 transition-colors" onclick="this.closest('.fixed').remove()">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        </button>
+                    </div>
+                    <div class="flex-grow grid grid-cols-1 md:grid-cols-2 gap-4 p-4" style="min-height: 0;">
+                        <div class="flex flex-col" style="min-height: 0;">
+                            <h3 class="font-semibold mb-2">Original Code</h3>
+                            <div class="flex-grow bg-slate-100 dark:bg-slate-900 rounded-lg overflow-auto p-2"><pre class="text-sm whitespace-pre-wrap"><code>${escapeHtml(originalCode)}</code></pre></div>
+                        </div>
+                        <div class="flex flex-col" style="min-height: 0;">
+                            <h3 class="font-semibold mb-2">Refactored Code</h3>
+                            <div class="flex-grow bg-slate-100 dark:bg-slate-900 rounded-lg overflow-auto p-2"><pre class="text-sm whitespace-pre-wrap"><code>${escapeHtml(refactoredCode)}</code></pre></div>
+                        </div>
+                    </div>
+                    <div class="p-4 border-t border-slate-200 dark:border-slate-700 max-h-48 overflow-y-auto">
+                        <h3 class="font-semibold mb-2">Explanation of Changes</h3>
+                        <div class="text-sm prose dark:prose-invert">${isRefactored ? explanation : '<p>No changes were needed. The original code is already well-structured.</p>'}</div>
+                    </div>
+                </div>
+            `;
+            modalContainer.appendChild(modal);
+        }
+        
+        async function getProjectContext(projectName) {
+            const files = await fetchFromBackend(`action=list_recursive&path=/${projectName}/`);
+            if (files.error) throw new Error(files.error);
+
+            const fileList = files.map(f => f.name).join('\n');
+            let fileContents = [];
+            
+            const importantFileBasenames = ['index.html', 'index.php', 'package.json', 'composer.json', 'README.md', 'app.js', 'main.js', 'style.css'];
+            const importantFilesFound = files.filter(fileObj => {
+                const basename = (fileObj.name || '').split('/').pop();
+                return importantFileBasenames.includes(basename);
+            });
+
+            for (const fileObj of importantFilesFound) {
+                const filePath = `${projectName}/${fileObj.name}`;
+                try {
+                    const content = await fetchFromBackend(`action=get_content&path=${encodeURIComponent(filePath)}`);
+                    if (content && !content.error) {
+                        fileContents.push(`--- Content of ${fileObj.name} ---\n${content.content.substring(0, 2000)}\n---`);
+                    } else {
+                        console.warn(`Could not fetch content for ${filePath}:`, content.error);
+                    }
+                } catch (e) { console.warn(`Error fetching content for ${filePath}`, e); }
+            }
+            
+            return { fileList, fileContents: fileContents.join('\n\n') };
+        }
+        
+        async function summarizeAllProjects() {
+            const apiKey = allSettings.geminiApiKey;
+            if (!apiKey) {
+                alert('Please set your Gemini API Key in the settings first.');
+                return;
+            }
+
+            const btn = document.getElementById('summarize-all-btn');
+            const originalBtnText = btn.innerHTML;
+            btn.disabled = true;
+
+            const projectDivs = document.querySelectorAll('#website-list-container .settings-item');
+            const projectNames = Array.from(projectDivs).map(div => div.dataset.name);
+            
+            for (let i = 0; i < projectNames.length; i++) {
+                const projectName = projectNames[i];
+                btn.innerHTML = `<span class="animate-pulse">Summarizing ${i + 1} of ${projectNames.length}: ${projectName}...</span>`;
+                try {
+                    await summarizeSingleProject(projectName);
+                } catch (error) {
+                    console.error(`Failed to summarize ${projectName}:`, error);
+                    alert(`Failed to summarize ${projectName}. Check console for details.`);
+                    btn.innerHTML = originalBtnText;
+                    btn.disabled = false;
+                    return;
+                }
+            }
+
+            btn.innerHTML = 'Saving...';
+            await saveAllSettingsAndReload();
+        }
+
+        async function summarizeSingleProject(projectName) {
+            const { fileList, fileContents } = await getProjectContext(projectName);
+
+            const prompt = `
+                Analyze the following file structure and file contents for a web project named "${projectName}".
+                Provide a response in JSON format with two keys:
+                1. "description": A single, concise sentence (under 15 words) describing the project's purpose.
+                2. "tags": An array of 3-5 relevant technology tags (e.g., "React", "PHP", "Portfolio", "API", "Game").
+            `;
+
+            const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${allSettings.geminiApiKey}`;
+            const response = await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: prompt }] }],
+                    generationConfig: { responseMimeType: "application/json" }
+                })
+            });
+
+            if (!response.ok) throw new Error(`API Error: ${response.status}`);
+            
+            const result = await response.json();
+            const summaryJson = JSON.parse(result.candidates[0].content.parts[0].text);
+            
+            if (!allSettings.websites[projectName]) {
+                allSettings.websites[projectName] = {};
+            }
+            allSettings.websites[projectName].description = summaryJson.description;
+            allSettings.websites[projectName].tags = summaryJson.tags;
+        }
+
+        async function saveAllSettingsAndReload() {
+             try {
+                const response = await fetch('browser.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'save_settings', settings: allSettings })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    location.reload();
+                } else {
+                    console.error('Failed to save settings:', result.error || 'Unknown error');
+                }
+            } catch (error) {
+                console.error('Error saving settings:', error.message);
+            }
+        }
+        
+        function backupAllProjects() {
+            const btn = document.getElementById('backup-all-btn');
+            const originalBtnText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="animate-pulse">Creating backup...</span>';
+            
+            // The download is initiated by navigating to the URL.
+            // The browser will handle the file download dialog.
+            window.location.href = 'browser.php?action=backup_all';
+
+            // Reset the button after a short delay.
+            setTimeout(() => {
+                btn.disabled = false;
+                btn.innerHTML = originalBtnText;
+            }, 3000);
+        }
+
+        document.addEventListener('DOMContentLoaded', async function() {
+            const styleSheet = document.createElement("style");
+            styleSheet.type = "text/css";
+            styleSheet.innerText = `
+                @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+                .animate-fadeIn { animation: fadeIn 0.3s ease-out forwards; }
+                @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+                .animate-fadeOut { animation: fadeOut 0.3s ease-in forwards; }
+                @keyframes scaleIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+                .animate-scaleIn { animation: scaleIn 0.3s ease-out forwards; }
+            `;
+            document.head.appendChild(styleSheet);
+
+            try {
+                const response = await fetch('settings.json?t=' + new Date().getTime());
+                if (response.ok) {
+                     allSettings = await response.json();
+                } else {
+                     allSettings = { websites: {}, websitesOrder: [] };
+                }
+            } catch (e) {
+                console.warn("settings.json not found or invalid, using defaults.");
+                allSettings = { websites: {}, websitesOrder: [] };
+            }
+            
+            const storedApiKey = localStorage.getItem('geminiApiKey');
+            if (storedApiKey) {
+                allSettings.geminiApiKey = storedApiKey;
+            }
+
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            applyTheme(allSettings.theme || (prefersDark ? 'dark' : 'light'));
+
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+                if (!allSettings.theme) {
+                    applyTheme(e.matches ? 'dark' : 'light');
+                }
+            });
+            
+            renderPage();
+        });
+    </script>
+</body>
+</html>
