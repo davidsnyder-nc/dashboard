@@ -61,9 +61,6 @@
             border-radius: 20px;
             border: 3px solid transparent;
         }
-        .dark ::-webkit-scrollbar-thumb {
-            background-color: rgba(75, 85, 99, 0.5); /* gray-600 with opacity */
-        }
 
         /* Styles for SortableJS drag-and-drop placeholders */
         .sortable-ghost {
@@ -76,32 +73,86 @@
         }
     </style>
 </head>
-<body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 transition-colors duration-300">
+<body class="bg-slate-50 text-slate-800 transition-colors duration-300">
 
     <!-- Main Application Container -->
     <div id="app-container" class="min-h-screen">
         
         <!-- Header -->
-        <header class="sticky top-0 z-30 backdrop-blur-lg bg-slate-50/80 dark:bg-slate-900/80 border-b border-slate-200 dark:border-slate-800">
+        <header class="sticky top-0 z-30 backdrop-blur-lg bg-slate-50/80 border-b border-slate-200">
             <div class="container mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex items-center justify-between h-20">
                     <!-- Title -->
                     <div class="flex items-center gap-4">
                         <img src="/images/me.png" alt="Logo" class="w-10 h-10 rounded-full object-cover" onerror="this.style.display='none'">
-                        <h1 class="text-2xl font-bold text-slate-900 dark:text-white">
+                        <h1 class="text-2xl font-bold text-slate-900">
                             web.<span class="text-blue-500">server</span>
                         </h1>
                     </div>
-                    <!-- Settings Button -->
-                    <button id="settings-button" onclick="openSettings()" class="p-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors" title="Settings">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                    </button>
+                    <!-- Header Buttons -->
+                    <div class="flex items-center gap-2">
+                        <!-- Glances Link -->
+                        <div id="glances-link-container" class="hidden">
+                            <button onclick="openGlancesModal()" class="p-2 rounded-full hover:bg-slate-200 transition-colors" title="Open Glances">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                </svg>
+                            </button>
+                        </div>
+                        <!-- Settings Button -->
+                        <button id="settings-button" onclick="openSettings()" class="p-2 rounded-full hover:bg-slate-200 transition-colors" title="Settings">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
             </div>
         </header>
 
-        <!-- Main Content: Website Grid -->
+        <!-- Main Content -->
         <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-10">
+            <!-- Glances System Stats -->
+            <div id="glances-stats" class="mb-10 hidden">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- CPU Card -->
+                    <div class="bg-white p-6 rounded-xl border border-slate-200">
+                        <h3 class="text-lg font-semibold text-slate-600 mb-2">CPU Usage</h3>
+                        <div class="flex items-baseline justify-between">
+                            <span id="cpu-usage" class="text-4xl font-bold text-slate-800">...</span>
+                            <span class="text-2xl font-medium text-slate-500">%</span>
+                        </div>
+                        <div class="w-full bg-slate-200 rounded-full h-2.5 mt-4">
+                            <div id="cpu-bar" class="bg-blue-500 h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <!-- Memory Card -->
+                    <div class="bg-white p-6 rounded-xl border border-slate-200">
+                        <h3 class="text-lg font-semibold text-slate-600 mb-2">Memory Usage</h3>
+                        <div class="flex items-baseline justify-between">
+                            <span id="mem-usage" class="text-4xl font-bold text-slate-800">...</span>
+                            <span class="text-2xl font-medium text-slate-500">%</span>
+                        </div>
+                        <div class="w-full bg-slate-200 rounded-full h-2.5 mt-4">
+                            <div id="mem-bar" class="bg-green-500 h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <!-- Disk Card -->
+                    <div class="bg-white p-6 rounded-xl border border-slate-200">
+                        <h3 class="text-lg font-semibold text-slate-600 mb-2">Disk Usage</h3>
+                        <div class="flex items-baseline justify-between">
+                            <span id="disk-usage" class="text-4xl font-bold text-slate-800">...</span>
+                             <span class="text-2xl font-medium text-slate-500">%</span>
+                        </div>
+                        <div class="w-full bg-slate-200 rounded-full h-2.5 mt-4">
+                            <div id="disk-bar" class="bg-purple-500 h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Website Grid -->
             <div id="websites-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 <!-- Website cards will be injected here by JavaScript -->
             </div>
@@ -113,8 +164,8 @@
     
     <!-- Gemini Chatbot FAB -->
     <button onclick="openChatbot()" class="fixed bottom-6 right-6 bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 transition-all duration-300 transform hover:scale-110 z-40">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
-            <path d="M2.678 11.894a1 1 0 0 1 .287.801 10.97 10.97 0 0 1-.398 2c1.395-.323 2.247-.697 2.634-.893a1 1 0 0 1 .71-.074A8.06 8.06 0 0 0 8 14c3.996 0 7-2.582 7-5.5S11.996 3 8 3 1 5.582 1 8.5c0 .642.172 1.254.46 1.824a1 1 0 0 1-.287.801zm2.111 2.262s.11.084.242.155a1.96 1.96 0 0 0 .585.255c.13.049.208.095.25.111a.43.43 0 0 0 .229.02.5.5 0 0 0 .22-.15.65.65 0 0 0 .11-.392c-.035-.335-.11-.83-.254-1.433a1 1 0 0 0-1.03-.806c-.35.065-.58.27-.64.43a1 1 0 0 0 .125 1.02z"/>
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
         </svg>
     </button>
 
@@ -122,6 +173,7 @@
         // --- Global State ---
         let allSettings = {};
         let chatHistory = [];
+        let glancesInterval;
         const PROXY_URL = 'https://corsproxy.io/?';
 
         // --- Utility Functions ---
@@ -155,46 +207,6 @@
                     modalContainer.innerHTML = '';
                     modalContainer.classList.add('hidden');
                 }, 300); // Match animation duration
-            }
-        }
-
-        // --- Theme Management ---
-
-        /**
-         * Applies the theme (dark/light) to the document.
-         * @param {string} theme - 'dark' or 'light'.
-         */
-        function applyTheme(theme) {
-            const html = document.documentElement;
-            if (theme === 'dark') {
-                html.classList.add('dark');
-            } else {
-                html.classList.remove('dark');
-            }
-            allSettings.theme = theme;
-        }
-
-        /**
-         * Toggles the current theme.
-         */
-        function toggleTheme() {
-            const currentTheme = document.documentElement.classList.contains('dark') ? 'light' : 'dark';
-            applyTheme(currentTheme);
-            saveThemeSetting();
-        }
-
-        /**
-         * Saves the current theme preference to the server.
-         */
-        async function saveThemeSetting() {
-             try {
-                await fetch('browser.php', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'save_settings', settings: allSettings })
-                });
-            } catch (error) {
-                console.error('Error saving theme setting:', error);
             }
         }
 
@@ -244,19 +256,20 @@
         function openSettings() {
             const modalContainer = document.getElementById('modal-container');
             modalContainer.classList.remove('hidden');
+            const glancesSettings = allSettings.glances || {};
             modalContainer.innerHTML = `
                 <div class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn">
-                    <div id="settingsModal" class="modal-content bg-white dark:bg-slate-800 rounded-lg shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col animate-scaleIn">
+                    <div id="settingsModal" class="modal-content bg-white rounded-lg shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col animate-scaleIn">
                         <!-- Modal Header -->
-                        <div class="flex justify-between items-center p-5 border-b border-slate-200 dark:border-slate-700">
-                            <h2 class="text-xl font-semibold text-slate-900 dark:text-white">Dashboard Settings</h2>
+                        <div class="flex justify-between items-center p-5 border-b border-slate-200">
+                            <h2 class="text-xl font-semibold text-slate-900">Dashboard Settings</h2>
                             <button class="text-slate-500 hover:text-blue-500 transition-colors" onclick="closeModal()">
                                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                             </button>
                         </div>
                         
                         <!-- Modal Tabs -->
-                        <div class="flex border-b border-slate-200 dark:border-slate-700 px-6">
+                        <div class="flex border-b border-slate-200 px-6">
                             <button class="py-3 px-4 font-medium text-sm border-b-2 border-blue-500 text-blue-500" onclick="switchSettingsTab('websites', this)">Websites</button>
                             <button class="py-3 px-4 font-medium text-sm border-b-2 border-transparent text-slate-500 hover:text-blue-500" onclick="switchSettingsTab('general', this)">General</button>
                             <button class="py-3 px-4 font-medium text-sm border-b-2 border-transparent text-slate-500 hover:text-blue-500" onclick="switchSettingsTab('backup', this)">Backup</button>
@@ -264,9 +277,9 @@
 
                         <!-- Modal Body -->
                         <div id="websitesSettings" class="settings-tab-content flex-grow overflow-y-auto p-6 space-y-4">
-                             <div class="p-4 bg-slate-100 dark:bg-slate-700/50 rounded-lg">
-                                <h3 class="font-semibold mb-2 text-slate-800 dark:text-slate-200">GitHub Sync</h3>
-                                <p class="text-sm text-slate-600 dark:text-slate-400 mb-4">Fetch the latest descriptions and repository topics (tags) for all projects linked to a GitHub repository.</p>
+                             <div class="p-4 bg-slate-100 rounded-lg">
+                                <h3 class="font-semibold mb-2 text-slate-800">GitHub Sync</h3>
+                                <p class="text-sm text-slate-600 mb-4">Fetch the latest descriptions and repository topics (tags) for all projects linked to a GitHub repository.</p>
                                 <button id="refresh-github-btn" onclick="refreshAllGitHubData()" class="w-full px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-md">
                                     Refresh GitHub Data
                                 </button>
@@ -276,34 +289,51 @@
                             </div>
                         </div>
                         <div id="generalSettings" class="settings-tab-content flex-grow overflow-y-auto p-6 space-y-4 hidden">
+                            <div class="p-4 bg-slate-100 rounded-lg">
+                                <h3 class="font-semibold mb-2 text-slate-800">Glances System Monitor</h3>
+                                <div class="space-y-4">
+                                    <div>
+                                        <label class="flex items-center gap-2 text-sm text-slate-700">
+                                            <input type="checkbox" id="glancesEnabled" class="rounded" ${glancesSettings.enabled ? 'checked' : ''}>
+                                            Enable On-Page System Monitor
+                                        </label>
+                                        <p class="text-xs text-slate-500 mt-1">Requires the <code>glances.php</code> file to be present on your server.</p>
+                                    </div>
+                                    <div class="pt-2">
+                                        <label for="glancesUrl" class="block text-sm font-medium text-slate-700 mb-1">External Glances URL (optional)</label>
+                                        <input type="url" id="glancesUrl" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" value="${glancesSettings.url || ''}" placeholder="http://192.168.1.100:61208">
+                                        <p class="text-xs text-slate-500 mt-1">If set, a link will appear in the header to open Glances in a modal.</p>
+                                    </div>
+                                </div>
+                            </div>
                             <div>
-                                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Gemini API Key</label>
-                                <input type="password" id="geminiApiKey" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" value="${allSettings.geminiApiKey || ''}" placeholder="Enter your Gemini API Key">
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Gemini API Key</label>
+                                <input type="password" id="geminiApiKey" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" value="${allSettings.geminiApiKey || ''}" placeholder="Enter your Gemini API Key">
                                 <p class="text-xs text-slate-500 mt-1">Your key is stored in your browser's local storage and also saved to settings.json on your server.</p>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">GitHub Token</label>
-                                <input type="password" id="githubToken" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" value="${allSettings.githubToken || ''}" placeholder="Enter your GitHub Personal Access Token">
+                                <label class="block text-sm font-medium text-slate-700 mb-1">GitHub Token</label>
+                                <input type="password" id="githubToken" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" value="${allSettings.githubToken || ''}" placeholder="Enter your GitHub Personal Access Token">
                                 <p class="text-xs text-slate-500 mt-1">Used to fetch project descriptions and backup repositories.</p>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Custom Chatbot Context</label>
-                                <textarea id="chatbotContext" class="w-full h-32 px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Provide any additional context for the chatbot here...">${allSettings.chatbotContext || ''}</textarea>
-                                <p class="text-xs text-slate-500 mt-1">The chatbot automatically reads context from <strong>server-info.html</strong> and <strong>filesystem.txt</strong> in your root directory, if they exist.</p>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Custom Chatbot Context</label>
+                                <textarea id="chatbotContext" class="w-full h-32 px-3 py-2 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Provide any additional context for the chatbot here...">${allSettings.chatbotContext || ''}</textarea>
+                                <p class="text-xs text-slate-500 mt-1">The chatbot automatically reads context from <strong>server-info.html</strong> in your root directory, if it exists.</p>
                             </div>
                         </div>
                         <div id="backupSettings" class="settings-tab-content flex-grow overflow-y-auto p-6 space-y-6 hidden">
-                             <div class="p-4 bg-slate-100 dark:bg-slate-700/50 rounded-lg">
-                                <h3 class="font-semibold mb-2 text-slate-800 dark:text-slate-200">Local Project Backup</h3>
-                                <p class="text-sm text-slate-600 dark:text-slate-400 mb-4">Create a .zip archive of all your project folders on this server. This does not include server configuration files or hidden directories.</p>
+                             <div class="p-4 bg-slate-100 rounded-lg">
+                                <h3 class="font-semibold mb-2 text-slate-800">Local Project Backup</h3>
+                                <p class="text-sm text-slate-600 mb-4">Create a .zip archive of all your project folders on this server. This does not include server configuration files or hidden directories.</p>
                                 <button id="backup-all-btn" onclick="backupAllProjects()" class="w-full px-4 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors shadow-md">
                                     Create & Download Local Backup
                                 </button>
                             </div>
-                            <div class="p-4 bg-slate-100 dark:bg-slate-700/50 rounded-lg">
-                                <h3 class="font-semibold mb-2 text-slate-800 dark:text-slate-200">GitHub Repositories Backup</h3>
-                                <p class="text-sm text-slate-600 dark:text-slate-400 mb-4">Download a .zip archive of all your personal repositories from GitHub. Requires a GitHub Token to be set in General settings.</p>
-                                <button id="backup-github-btn" onclick="backupGitHubRepos()" class="w-full px-4 py-2 bg-gray-800 text-white font-semibold rounded-lg hover:bg-gray-900 dark:bg-sky-500 dark:hover:bg-sky-600 transition-colors shadow-md">
+                            <div class="p-4 bg-slate-100 rounded-lg">
+                                <h3 class="font-semibold mb-2 text-slate-800">GitHub Repositories Backup</h3>
+                                <p class="text-sm text-slate-600 mb-4">Download a .zip archive of all your personal repositories from GitHub. Requires a GitHub Token to be set in General settings.</p>
+                                <button id="backup-github-btn" onclick="backupGitHubRepos()" class="w-full px-4 py-2 bg-gray-800 text-white font-semibold rounded-lg hover:bg-gray-900 transition-colors shadow-md">
                                     Create & Download GitHub Backup
                                 </button>
                                 <p class="text-xs text-center text-slate-500 mt-3">Powered by <a href="https://gitvault.app/" target="_blank" class="text-blue-500 hover:underline">GitVault</a></p>
@@ -311,10 +341,9 @@
                         </div>
                         
                         <!-- Modal Footer -->
-                        <div class="flex justify-between items-center p-5 border-t border-slate-200 dark:border-slate-700">
+                        <div class="flex justify-between items-center p-5 border-t border-slate-200">
                              <div class="flex gap-4">
-                                <button class="px-4 py-2 text-sm font-medium rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors" onclick="toggleTheme()">Toggle Theme</button>
-                                <button class="px-4 py-2 text-sm font-medium rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors" onclick="restoreDefaultSettings()">Restore Defaults</button>
+                                <button class="px-4 py-2 text-sm font-medium rounded-lg hover:bg-slate-100 transition-colors" onclick="restoreDefaultSettings()">Restore Defaults</button>
                              </div>
                              <button class="px-5 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-md" onclick="saveAllSettings()">Save and Close</button>
                         </div>
@@ -346,7 +375,7 @@
         async function loadWebsiteSettingsPanel() {
             const container = document.getElementById('website-list-container');
             if (!container) return;
-            container.innerHTML = '<div class="text-slate-500 dark:text-slate-400">Loading websites...</div>';
+            container.innerHTML = '<div class="text-slate-500">Loading websites...</div>';
             try {
                 const items = await fetchFromBackend('action=list&path=/');
                 if (items && !items.error) {
@@ -355,7 +384,7 @@
                     container.innerHTML = sortedFolders.map(item => {
                         const siteSettings = allSettings.websites[item.name] || {};
                         return `
-                        <div class="settings-item bg-slate-50 dark:bg-slate-700/50 rounded-lg p-4 mt-4" data-name="${item.name}">
+                        <div class="settings-item bg-slate-50 rounded-lg p-4 mt-4" data-name="${item.name}">
                             <div class="flex items-center gap-3 mb-4">
                                 <span class="handle cursor-grab text-slate-400 hover:text-blue-500">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M7 2a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 5a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 8a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm-3 3a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/></svg>
@@ -364,25 +393,25 @@
                                     <button onclick="moveToTop(this)" title="Move to Top" class="p-1 text-slate-400 hover:text-blue-500"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8 15a.5.5 0 0 0 .5-.5V2.707l3.146 3.147a.5.5 0 0 0 .708-.708l-4-4a.5.5 0 0 0-.708 0l-4 4a.5.5 0 1 0 .708.708L7.5 2.707V14.5a.5.5 0 0 0 .5.5z"/></svg></button>
                                     <button onclick="moveToBottom(this)" title="Move to Bottom" class="p-1 text-slate-400 hover:text-blue-500"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8 1a.5.5 0 0 1 .5.5v11.793l3.146-3.147a.5.5 0 0 1 .708.708l-4 4a.5.5 0 0 1-.708 0l-4-4a.5.5 0 0 1 .708-.708L7.5 13.293V1.5A.5.5 0 0 1 8 1z"/></svg></button>
                                 </div>
-                                <h4 class="font-medium text-slate-900 dark:text-white flex-grow">${item.name}</h4>
+                                <h4 class="font-medium text-slate-900 flex-grow">${item.name}</h4>
                             </div>
                             <div class="space-y-4 pl-8">
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Display Name</label><input type="text" data-key="displayName" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" value="${siteSettings.displayName || item.name}"></div>
-                                    <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Logo Path</label><input type="text" data-key="logoPath" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" value="${siteSettings.logoPath || ''}" placeholder="/${item.name}/logo.png"></div>
+                                    <div><label class="block text-sm font-medium text-slate-700 mb-1">Display Name</label><input type="text" data-key="displayName" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" value="${siteSettings.displayName || item.name}"></div>
+                                    <div><label class="block text-sm font-medium text-slate-700 mb-1">Logo Path</label><input type="text" data-key="logoPath" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" value="${siteSettings.logoPath || ''}" placeholder="/${item.name}/logo.png"></div>
                                 </div>
-                                <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Description</label><textarea data-key="description" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Fallback description if GitHub repo is not set or has no description.">${siteSettings.description || ''}</textarea></div>
+                                <div><label class="block text-sm font-medium text-slate-700 mb-1">Description</label><textarea data-key="description" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Fallback description if GitHub repo is not set or has no description.">${siteSettings.description || ''}</textarea></div>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">External Link URL</label><input type="url" data-key="externalLink" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" value="${siteSettings.externalLink || ''}" placeholder="https://example.com"></div>
-                                    <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">External Link Title</label><input type="text" data-key="externalLinkTitle" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" value="${siteSettings.externalLinkTitle || ''}" placeholder="Visit Live Site"></div>
+                                    <div><label class="block text-sm font-medium text-slate-700 mb-1">External Link URL</label><input type="url" data-key="externalLink" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" value="${siteSettings.externalLink || ''}" placeholder="https://example.com"></div>
+                                    <div><label class="block text-sm font-medium text-slate-700 mb-1">External Link Title</label><input type="text" data-key="externalLinkTitle" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" value="${siteSettings.externalLinkTitle || ''}" placeholder="Visit Live Site"></div>
                                 </div>
-                                <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">GitHub Repo URL</label><input type="url" data-key="githubLink" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" value="${siteSettings.githubLink || ''}" placeholder="https://github.com/user/repo"></div>
+                                <div><label class="block text-sm font-medium text-slate-700 mb-1">GitHub Repo URL</label><input type="url" data-key="githubLink" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" value="${siteSettings.githubLink || ''}" placeholder="https://github.com/user/repo"></div>
                                 <div class="pt-2 flex items-center justify-between">
-                                    <label class="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
+                                    <label class="flex items-center gap-2 text-sm text-slate-700">
                                         <input type="checkbox" data-key="showInternalLink" class="rounded" ${siteSettings.showInternalLink !== false ? 'checked' : ''}>
                                         Show internal link button
                                     </label>
-                                    <label class="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
+                                    <label class="flex items-center gap-2 text-sm text-slate-700">
                                         <input type="checkbox" data-key="isHidden" class="rounded" ${siteSettings.isHidden ? 'checked' : ''}>
                                         Hide this folder
                                     </label>
@@ -412,6 +441,12 @@
             newSettings.geminiApiKey = document.getElementById('geminiApiKey')?.value || '';
             newSettings.githubToken = document.getElementById('githubToken')?.value || '';
             newSettings.chatbotContext = document.getElementById('chatbotContext')?.value || '';
+            
+            // Update Glances settings
+            newSettings.glances = {
+                enabled: document.getElementById('glancesEnabled')?.checked || false,
+                url: document.getElementById('glancesUrl')?.value.trim() || ''
+            };
 
             localStorage.setItem('geminiApiKey', newSettings.geminiApiKey);
 
@@ -493,7 +528,7 @@
          */
         function createWebsiteCard(siteData, index) {
             const card = document.createElement('div');
-            card.className = 'card-animated bg-white dark:bg-slate-800/50 p-6 rounded-xl hover:scale-105 border border-slate-200 dark:border-slate-800 hover:border-blue-500 dark:hover:border-blue-500 transition-all duration-300 flex flex-col';
+            card.className = 'card-animated bg-white p-6 rounded-xl hover:scale-105 border border-slate-200 hover:border-blue-500 transition-all duration-300 flex flex-col';
             card.style.animationDelay = `${index * 50}ms`;
             card.id = `card-${siteData.name}`;
 
@@ -507,7 +542,7 @@
 
             // --- Logo Logic ---
             const logoSrc = siteSettings.logoPath || `/${siteData.name}/logo.png`;
-            const placeholderHtml = `<div class='w-24 h-24 rounded-full flex items-center justify-center overflow-hidden bg-slate-100 dark:bg-slate-700'><span class='text-4xl font-bold text-slate-500'>${displayName.charAt(0).toUpperCase()}</span></div>`;
+            const placeholderHtml = `<div class='w-24 h-24 rounded-full flex items-center justify-center overflow-hidden bg-slate-100'><span class='text-4xl font-bold text-slate-500'>${displayName.charAt(0).toUpperCase()}</span></div>`;
             const logoContainerHtml = `
                 <div class="w-24 h-24 mb-4 flex items-center justify-center">
                     <img src="${logoSrc}" alt="${displayName} Logo" class="max-w-full max-h-full object-contain" 
@@ -517,7 +552,7 @@
             // --- Tags Logic ---
             const tagsHtml = tags.length > 0 ? `
                 <div class="flex flex-wrap justify-center gap-2 mt-2">
-                    ${tags.map(tag => `<span class="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full dark:bg-blue-900 dark:text-blue-300">${tag}</span>`).join('')}
+                    ${tags.map(tag => `<span class="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">${tag}</span>`).join('')}
                 </div>` : '';
 
             // --- Button Logic ---
@@ -536,12 +571,12 @@
             }
 
             if (externalLink && showInternal) {
-                iconButtonsHtml += `<a href="/${siteData.name}/" target="_blank" title="Visit Local" class="p-3 bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 hover:bg-slate-300 dark:hover:bg-slate-600 rounded-lg transition-colors">
+                iconButtonsHtml += `<a href="/${siteData.name}/" target="_blank" title="Visit Local" class="p-3 bg-slate-200 text-slate-800 hover:bg-slate-300 rounded-lg transition-colors">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
                 </a>`;
             }
             if (githubLink) {
-                iconButtonsHtml += `<a href="${githubLink}" target="_blank" title="View on GitHub" class="p-3 bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 hover:bg-slate-300 dark:hover:bg-slate-600 rounded-lg transition-colors">
+                iconButtonsHtml += `<a href="${githubLink}" target="_blank" title="View on GitHub" class="p-3 bg-slate-200 text-slate-800 hover:bg-slate-300 rounded-lg transition-colors">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
                 </a>`;
             }
@@ -554,15 +589,15 @@
 
             let footerHtml = '';
             if (buttonsHtml) {
-                footerHtml = `<div class="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+                footerHtml = `<div class="mt-4 pt-4 border-t border-slate-200">
                                 <div class="flex items-center gap-3">${buttonsHtml}</div>
                               </div>`;
             }
             
             // --- AI Features Buttons ---
             const aiFeaturesHtml = `
-                <div class="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row gap-2">
-                    <button onclick="openCodebaseChat('${siteData.name}')" class="w-full text-sm px-3 py-2 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 rounded-lg transition-colors flex items-center justify-center gap-2">
+                <div class="mt-4 pt-4 border-t border-slate-200 flex flex-col sm:flex-row gap-2">
+                    <button onclick="openCodebaseChat('${siteData.name}')" class="w-full text-sm px-3 py-2 bg-slate-200 hover:bg-slate-300 rounded-lg transition-colors flex items-center justify-center gap-2">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.5a1 1 0 0 0-.8.4l-1.9 2.533a1 1 0 0 1-1.6 0L5.3 12.4a1 1 0 0 0-.8-.4H2a2 2 0 0 1-2-2V2zm3.5 1a.5.5 0 0 0 0 1h9a.5.5 0 0 0 0-1h-9zm0 2.5a.5.5 0 0 0 0 1h9a.5.5 0 0 0 0-1h-9zm0 2.5a.5.5 0 0 0 0 1h5a.5.5 0 0 0 0-1h-5z"/></svg>
                         Ask Codebase
                     </button>
@@ -572,8 +607,8 @@
             card.innerHTML = `
                 <div class="flex-grow flex flex-col items-center text-center">
                     ${logoContainerHtml}
-                    <h3 class="text-xl font-bold text-slate-900 dark:text-white">${displayName}</h3>
-                    <p class="text-sm text-slate-500 dark:text-slate-400 mt-2 h-10">${description}</p>
+                    <h3 class="text-xl font-bold text-slate-900">${displayName}</h3>
+                    <p class="text-sm text-slate-500 mt-2 h-10">${description}</p>
                     ${tagsHtml}
                 </div>
                 ${aiFeaturesHtml}
@@ -660,7 +695,7 @@
             const websitesGrid = document.getElementById('websites-grid');
             if (!websitesGrid) return;
 
-            websitesGrid.innerHTML = '<p class="text-slate-500 dark:text-slate-400 col-span-full">Loading projects...</p>';
+            websitesGrid.innerHTML = '<p class="text-slate-500 col-span-full">Loading projects...</p>';
             
             await fetchGitHubDataForProjects();
             
@@ -679,7 +714,7 @@
                     websitesGrid.innerHTML = ''; // Clear loading message
                     
                     if (sortedFolders.length === 0) {
-                        websitesGrid.innerHTML = '<p class="text-slate-500 dark:text-slate-400 col-span-full text-center py-10">No website folders found or all are hidden.</p>';
+                        websitesGrid.innerHTML = '<p class="text-slate-500 col-span-full text-center py-10">No website folders found or all are hidden.</p>';
                     } else {
                         sortedFolders.forEach((folder, index) => {
                             websitesGrid.appendChild(createWebsiteCard({ name: folder.name }, index));
@@ -706,9 +741,9 @@
             
             let modalHtml = `
                 <div class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end justify-center sm:items-center z-50 animate-fadeIn" onclick="if (event.target === this) closeModal()">
-                    <div class="modal-content bg-white dark:bg-slate-800 rounded-t-lg sm:rounded-lg shadow-2xl w-full max-w-4xl h-[85vh] flex flex-col animate-scaleIn">
-                        <div class="flex justify-between items-center p-4 border-b border-slate-200 dark:border-slate-700">
-                            <h2 class="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                    <div class="modal-content bg-white rounded-t-lg sm:rounded-lg shadow-2xl w-full max-w-4xl h-[85vh] flex flex-col animate-scaleIn">
+                        <div class="flex justify-between items-center p-4 border-b border-slate-200">
+                            <h2 class="text-lg font-semibold text-slate-900 flex items-center gap-2">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.5a1 1 0 0 0-.8.4l-1.9 2.533a1 1 0 0 1-1.6 0L5.3 12.4a1 1 0 0 0-.8-.4H2a2 2 0 0 1-2-2V2zm3.5 1a.5.5 0 0 0 0 1h9a.5.5 0 0 0 0-1h-9zm0 2.5a.5.5 0 0 0 0 1h9a.5.5 0 0 0 0-1h-9zm0 2.5a.5.5 0 0 0 0 1h5a.5.5 0 0 0 0-1h-5z"/></svg>
                                 ${title}
                             </h2>
@@ -716,23 +751,23 @@
                         </div>
                         <div class="flex-grow flex overflow-hidden">
                             ${projectName ? `
-                            <div class="w-1/3 border-r border-slate-200 dark:border-slate-700 overflow-y-auto p-2">
+                            <div class="w-1/3 border-r border-slate-200 overflow-y-auto p-2">
                                 <div id="file-browser" class="text-sm">Loading files...</div>
                             </div>
                             <div id="code-chat-view" class="w-2/3 flex flex-col">
-                                <div id="file-content-view" class="flex-grow p-4 overflow-y-auto bg-slate-50 dark:bg-slate-900">
+                                <div id="file-content-view" class="flex-grow p-4 overflow-y-auto bg-slate-50">
                                     <p class="text-slate-500">Select a file to view its content or ask a question about the project below.</p>
                                 </div>
-                                <div id="refactor-button-container" class="p-2 border-t border-slate-200 dark:border-slate-700 hidden">
+                                <div id="refactor-button-container" class="p-2 border-t border-slate-200 hidden">
                                     <button id="refactor-btn" class="w-full px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors shadow-md">Analyze & Refactor File</button>
                                 </div>
                             ` : `
                             <div id="code-chat-view" class="w-full flex flex-col">
                             `}
                                 <div id="chat-messages" class="flex-grow overflow-y-auto p-4 space-y-4"></div>
-                                <div class="p-4 border-t border-slate-200 dark:border-slate-700">
+                                <div class="p-4 border-t border-slate-200">
                                     <form id="chat-form" class="flex items-center gap-3">
-                                        <input type="text" id="chat-input" class="flex-grow px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Ask about your server...">
+                                        <input type="text" id="chat-input" class="flex-grow px-3 py-2 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Ask about your server...">
                                         <button type="submit" class="p-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M15.854.146a.5.5 0 0 1 .11.54l-5.819 14.547a.75.75 0 0 1-1.329.124l-3.178-4.995L.643 7.184a.75.75 0 0 1 .124-1.33L15.314.037a.5.5 0 0 1 .54.11zM6.636 10.07l2.761 4.338L14.13 2.576 6.636 10.07zm6.787-8.201L1.591 6.602l4.339 2.76 7.494-7.493z"/></svg>
                                         </button>
@@ -769,7 +804,7 @@
                     messageEl.innerHTML = `<div class="bg-blue-500 text-white p-3 rounded-lg max-w-xs sm:max-w-md">${msg.parts[0].text}</div>`;
                 } else {
                     messageEl.className = 'flex justify-start';
-                    messageEl.innerHTML = `<div class="bg-slate-200 dark:bg-slate-700 p-3 rounded-lg max-w-xs sm:max-w-md">${msg.parts[0].text}</div>`;
+                    messageEl.innerHTML = `<div class="bg-slate-200 p-3 rounded-lg max-w-xs sm:max-w-md">${msg.parts[0].text}</div>`;
                 }
                 messagesContainer.appendChild(messageEl);
             });
@@ -794,7 +829,7 @@
             const messagesContainer = document.getElementById('chat-messages');
             const loadingEl = document.createElement('div');
             loadingEl.className = 'flex justify-start';
-            loadingEl.innerHTML = `<div class="bg-slate-200 dark:bg-slate-700 p-3 rounded-lg"><span class="animate-pulse">...</span></div>`;
+            loadingEl.innerHTML = `<div class="bg-slate-200 p-3 rounded-lg"><span class="animate-pulse">...</span></div>`;
             messagesContainer.appendChild(loadingEl);
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
             
@@ -865,7 +900,7 @@
                 if (files.error) throw new Error(files.error);
                 
                 fileBrowser.innerHTML = files.map(file => `
-                    <div class="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-md cursor-pointer" onclick="loadFileContent('${projectName}', '${file.name}')">
+                    <div class="p-2 hover:bg-slate-100 rounded-md cursor-pointer" onclick="loadFileContent('${projectName}', '${file.name}')">
                         ${file.name}
                     </div>
                 `).join('');
@@ -917,16 +952,21 @@
             const truncatedContent = originalContent.substring(0, 8000);
 
             const prompt = `
-                You are an expert programmer performing a code review. Analyze the following code from the file "${filePath}" within the project "${projectName}".
-                The code may be truncated for brevity.
-                Identify areas for improvement in terms of clarity, efficiency, and best practices.
+                You are an expert programmer performing a code review on the following code from the file "${filePath}".
                 
-                Return a JSON object with three keys:
-                1. "refactored_code": The full code block, refactored with your suggested improvements. If the code was truncated, refactor only the provided portion.
-                2. "explanation": A concise, bulleted list (in Markdown) explaining the key changes you made and why they are improvements.
-                3. "is_refactored": A boolean value indicating if you made any changes (true) or if the code was already optimal (false).
+                Your task is to analyze the code for clarity, efficiency, and best practices, then provide a refactored version.
 
-                Original Code:
+                You MUST return a clean JSON object and NOTHING ELSE. Do not include Markdown fences like \`\`\`json, explanations, or any text outside of the JSON object.
+                The JSON response must strictly adhere to the following schema:
+                {
+                  "refactored_code": "string",
+                  "explanation": "string containing a concise, bulleted list in Markdown explaining the key changes.",
+                  "is_refactored": boolean
+                }
+                
+                Respond with only the raw JSON object so it can be parsed reliably.
+
+                Original Code to analyze:
                 \`\`\`
                 ${truncatedContent}
                 \`\`\`
@@ -949,12 +989,14 @@
                 
                 try {
                     const rawText = result.candidates[0].content.parts[0].text;
-                    const jsonStart = rawText.indexOf('{');
-                    const jsonEnd = rawText.lastIndexOf('}');
-                    if (jsonStart === -1 || jsonEnd === -1) {
+                    
+                    // Find the JSON block, which might be wrapped in markdown fences or other text
+                    const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+                    if (!jsonMatch || !jsonMatch[0]) {
                         throw new Error("No valid JSON object found in the AI response.");
                     }
-                    const jsonString = rawText.substring(jsonStart, jsonEnd + 1);
+                    
+                    const jsonString = jsonMatch[0];
                     const refactorData = JSON.parse(jsonString);
                     displayRefactorModal(truncatedContent, refactorData.refactored_code, refactorData.explanation, refactorData.is_refactored);
                 } catch (parseError) {
@@ -978,9 +1020,9 @@
             const modal = document.createElement('div');
             modal.className = 'fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn';
             modal.innerHTML = `
-                <div class="modal-content bg-white dark:bg-slate-800 rounded-lg shadow-2xl w-full max-w-6xl h-[90vh] flex flex-col animate-scaleIn">
-                    <div class="flex-shrink-0 flex justify-between items-center p-4 border-b border-slate-200 dark:border-slate-700">
-                        <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Refactoring Suggestions</h2>
+                <div class="modal-content bg-white rounded-lg shadow-2xl w-full max-w-6xl h-[90vh] flex flex-col animate-scaleIn">
+                    <div class="flex-shrink-0 flex justify-between items-center p-4 border-b border-slate-200">
+                        <h2 class="text-lg font-semibold text-slate-900">Refactoring Suggestions</h2>
                         <button class="text-slate-500 hover:text-blue-500 transition-colors" onclick="this.closest('.fixed').remove()">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                         </button>
@@ -991,19 +1033,19 @@
                         <div class="h-2/3 grid grid-cols-1 md:grid-cols-2 gap-4" style="min-height: 0;">
                             <div class="flex flex-col" style="min-height: 0;">
                                 <h3 class="font-semibold mb-2">Original Code</h3>
-                                <div class="flex-grow bg-slate-100 dark:bg-slate-900 rounded-lg overflow-auto p-2"><pre class="text-sm whitespace-pre-wrap"><code>${escapeHtml(originalCode)}</code></pre></div>
+                                <div class="flex-grow bg-slate-100 rounded-lg overflow-auto p-2"><pre class="text-sm whitespace-pre-wrap"><code>${escapeHtml(originalCode)}</code></pre></div>
                             </div>
                             <div class="flex flex-col" style="min-height: 0;">
                                 <h3 class="font-semibold mb-2">Refactored Code</h3>
-                                <div class="flex-grow bg-slate-100 dark:bg-slate-900 rounded-lg overflow-auto p-2"><pre class="text-sm whitespace-pre-wrap"><code>${escapeHtml(refactoredCode)}</code></pre></div>
+                                <div class="flex-grow bg-slate-100 rounded-lg overflow-auto p-2"><pre class="text-sm whitespace-pre-wrap"><code>${escapeHtml(refactoredCode)}</code></pre></div>
                             </div>
                         </div>
                         
                         <!-- Explanation Section -->
-                        <div class="h-1/3 flex flex-col border-t border-slate-200 dark:border-slate-700 pt-4" style="min-height: 0;">
+                        <div class="h-1/3 flex flex-col border-t border-slate-200 pt-4" style="min-height: 0;">
                             <h3 class="font-semibold mb-2">Explanation of Changes</h3>
-                            <div class="flex-grow bg-slate-100 dark:bg-slate-900 rounded-lg overflow-auto p-2">
-                                <div class="text-sm prose dark:prose-invert max-w-none">${isRefactored ? explanation : '<p>No changes were needed. The original code is already well-structured.</p>'}</div>
+                            <div class="flex-grow bg-slate-100 rounded-lg overflow-auto p-2">
+                                <div class="text-sm prose max-w-none">${isRefactored ? explanation : '<p>No changes were needed. The original code is already well-structured.</p>'}</div>
                             </div>
                         </div>
                     </div>
@@ -1205,6 +1247,109 @@
                 btn.innerHTML = originalBtnText;
             }
         }
+        
+        /**
+         * Opens the Glances URL in a modal.
+         */
+        function openGlancesModal() {
+            const glancesUrl = allSettings.glances?.url;
+            if (!glancesUrl) {
+                console.error("Glances URL is not set.");
+                return;
+            }
+            const modalContainer = document.getElementById('modal-container');
+            modalContainer.classList.remove('hidden');
+            modalContainer.innerHTML = `
+                <div class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn">
+                    <div class="modal-content bg-slate-100 rounded-lg shadow-2xl w-full h-full max-w-7xl max-h-[90vh] flex flex-col animate-scaleIn">
+                        <!-- Modal Header -->
+                        <div class="flex justify-between items-center p-4 border-b border-slate-200 bg-white rounded-t-lg">
+                            <h2 class="text-lg font-semibold text-slate-900">Glances System Monitor</h2>
+                            <div class="flex items-center gap-2">
+                                <a href="${glancesUrl}" target="_blank" class="text-slate-500 hover:text-blue-500 transition-colors" title="Open in new tab">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" /><path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z" /></svg>
+                                </a>
+                                <button class="text-slate-500 hover:text-blue-500 transition-colors" onclick="closeModal()">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                </button>
+                            </div>
+                        </div>
+                        <!-- Modal Body -->
+                        <div class="flex-grow p-2 bg-slate-100 rounded-b-lg">
+                            <iframe src="${glancesUrl}" class="w-full h-full border-0 rounded-md"></iframe>
+                        </div>
+                    </div>
+                </div>`;
+            
+            // Close modal if backdrop is clicked
+            modalContainer.querySelector('.fixed').addEventListener('click', (e) => {
+                if (e.target === e.currentTarget) closeModal();
+            });
+        }
+
+        /**
+         * Fetches and updates the Glances system statistics.
+         */
+        async function refreshGlancesStats() {
+            if (!allSettings.glances || !allSettings.glances.enabled) {
+                document.getElementById('glances-stats').classList.add('hidden');
+                if (glancesInterval) {
+                    clearInterval(glancesInterval);
+                    glancesInterval = null;
+                }
+                return;
+            }
+            document.getElementById('glances-stats').classList.remove('hidden');
+
+            try {
+                const [quicklookRes, fsRes] = await Promise.all([
+                    fetch('/glances.php?p=quicklook'),
+                    fetch('/glances.php?p=fs')
+                ]);
+
+                if (!quicklookRes.ok) throw new Error(`Quicklook fetch failed: ${quicklookRes.status}`);
+                if (!fsRes.ok) throw new Error(`Filesystem fetch failed: ${fsRes.status}`);
+
+                const quicklookData = await quicklookRes.json();
+                const fsData = await fsRes.json();
+
+                if (quicklookData.error) throw new Error(quicklookData.error);
+                if (fsData.error) throw new Error(fsData.error);
+
+                // Update CPU
+                if (quicklookData.cpu && typeof quicklookData.cpu !== 'undefined') {
+                    const cpuUsage = quicklookData.cpu.toFixed(1);
+                    document.getElementById('cpu-usage').textContent = cpuUsage;
+                    document.getElementById('cpu-bar').style.width = `${cpuUsage}%`;
+                }
+
+                // Update Memory
+                if (quicklookData.mem && typeof quicklookData.mem !== 'undefined') {
+                    const memUsage = quicklookData.mem.toFixed(1);
+                    document.getElementById('mem-usage').textContent = memUsage;
+                    document.getElementById('mem-bar').style.width = `${memUsage}%`;
+                }
+                
+                // Update Disk Usage
+                const rootFs = fsData.find(fs => fs.mnt_point === '/');
+                if (rootFs && typeof rootFs.percent !== 'undefined') {
+                     const diskUsage = rootFs.percent.toFixed(1);
+                     document.getElementById('disk-usage').textContent = diskUsage;
+                     document.getElementById('disk-bar').style.width = `${diskUsage}%`;
+                }
+
+            } catch (error) {
+                console.error('Could not fetch Glances stats:', error.message);
+                ['cpu-usage', 'mem-usage', 'disk-usage'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.textContent = 'N/A';
+                });
+                 ['cpu-bar', 'mem-bar', 'disk-bar'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.style.width = '0%';
+                });
+            }
+        }
 
 
         document.addEventListener('DOMContentLoaded', async function() {
@@ -1236,17 +1381,19 @@
             if (storedApiKey) {
                 allSettings.geminiApiKey = storedApiKey;
             }
-
-            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-            applyTheme(allSettings.theme || (prefersDark ? 'dark' : 'light'));
-
-            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
-                if (!allSettings.theme) {
-                    applyTheme(e.matches ? 'dark' : 'light');
-                }
-            });
             
             await renderPage();
+            
+            // Show Glances modal link if URL is set
+            if (allSettings.glances?.url) {
+                document.getElementById('glances-link-container').classList.remove('hidden');
+            }
+
+            // Initial call and interval for Glances stats
+            if (allSettings.glances && allSettings.glances.enabled) {
+                refreshGlancesStats();
+                glancesInterval = setInterval(refreshGlancesStats, 2000);
+            }
         });
     </script>
 </body>
