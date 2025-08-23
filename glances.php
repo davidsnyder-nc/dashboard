@@ -10,6 +10,7 @@ $glances_base_url = 'http://127.0.0.1:61208';
 $endpoint = $_GET['p'] ?? 'quicklook';
 
 // A whitelist of allowed endpoints to prevent abuse of the proxy.
+// EXPANDED: Added more endpoints for detailed system stats.
 $allowed_endpoints = [
     'quicklook',
     'cpu',
@@ -20,7 +21,7 @@ $allowed_endpoints = [
     'network',
     'sensors',
     'processlist',
-    'system' // <-- This was the missing endpoint
+    'system'
 ];
 
 // --- Validation ---
