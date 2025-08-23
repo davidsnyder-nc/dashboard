@@ -11,11 +11,17 @@
     <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display.swap" rel="stylesheet">
     
     <!-- SortableJS for drag-and-drop in settings -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
     
+    <!-- JSZip for creating zip files -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    
+    <!-- FileSaver.js for saving files -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+
     <!-- Favicon: Prevents console errors -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚀</text></svg>">
     
@@ -81,7 +87,7 @@
                 <div class="flex items-center justify-between h-20">
                     <!-- Title -->
                     <div class="flex items-center gap-4">
-                        <img src="/images/me.png" alt="Logo" class="w-10 h-10 rounded-full object-cover">
+                        <img src="/images/me.png" alt="Logo" class="w-10 h-10 rounded-full object-cover" onerror="this.style.display='none'">
                         <h1 class="text-2xl font-bold text-slate-900 dark:text-white">
                             web.<span class="text-blue-500">server</span>
                         </h1>
@@ -116,6 +122,7 @@
         // --- Global State ---
         let allSettings = {};
         let chatHistory = [];
+        const PROXY_URL = 'https://corsproxy.io/?';
 
         // --- Utility Functions ---
 
@@ -258,10 +265,10 @@
                         <!-- Modal Body -->
                         <div id="websitesSettings" class="settings-tab-content flex-grow overflow-y-auto p-6 space-y-4">
                              <div class="p-4 bg-slate-100 dark:bg-slate-700/50 rounded-lg">
-                                <h3 class="font-semibold mb-2 text-slate-800 dark:text-slate-200">AI Actions</h3>
-                                <p class="text-sm text-slate-600 dark:text-slate-400 mb-4">Automatically scan all project folders to generate descriptions and technology tags using AI.</p>
-                                <button id="summarize-all-btn" onclick="summarizeAllProjects()" class="w-full px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-md">
-                                    Summarize All Projects
+                                <h3 class="font-semibold mb-2 text-slate-800 dark:text-slate-200">GitHub Sync</h3>
+                                <p class="text-sm text-slate-600 dark:text-slate-400 mb-4">Fetch the latest descriptions and repository topics (tags) for all projects linked to a GitHub repository.</p>
+                                <button id="refresh-github-btn" onclick="refreshAllGitHubData()" class="w-full px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-md">
+                                    Refresh GitHub Data
                                 </button>
                             </div>
                             <div id="website-list-container">
@@ -275,18 +282,31 @@
                                 <p class="text-xs text-slate-500 mt-1">Your key is stored in your browser's local storage and also saved to settings.json on your server.</p>
                             </div>
                             <div>
+                                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">GitHub Token</label>
+                                <input type="password" id="githubToken" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" value="${allSettings.githubToken || ''}" placeholder="Enter your GitHub Personal Access Token">
+                                <p class="text-xs text-slate-500 mt-1">Used to fetch project descriptions and backup repositories.</p>
+                            </div>
+                            <div>
                                 <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Custom Chatbot Context</label>
                                 <textarea id="chatbotContext" class="w-full h-32 px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Provide any additional context for the chatbot here...">${allSettings.chatbotContext || ''}</textarea>
                                 <p class="text-xs text-slate-500 mt-1">The chatbot automatically reads context from <strong>server-info.html</strong> and <strong>filesystem.txt</strong> in your root directory, if they exist.</p>
                             </div>
                         </div>
-                        <div id="backupSettings" class="settings-tab-content flex-grow overflow-y-auto p-6 space-y-4 hidden">
+                        <div id="backupSettings" class="settings-tab-content flex-grow overflow-y-auto p-6 space-y-6 hidden">
                              <div class="p-4 bg-slate-100 dark:bg-slate-700/50 rounded-lg">
-                                <h3 class="font-semibold mb-2 text-slate-800 dark:text-slate-200">Project Backup</h3>
-                                <p class="text-sm text-slate-600 dark:text-slate-400 mb-4">Create a .zip archive of all your project folders. This does not include server configuration files or hidden directories.</p>
+                                <h3 class="font-semibold mb-2 text-slate-800 dark:text-slate-200">Local Project Backup</h3>
+                                <p class="text-sm text-slate-600 dark:text-slate-400 mb-4">Create a .zip archive of all your project folders on this server. This does not include server configuration files or hidden directories.</p>
                                 <button id="backup-all-btn" onclick="backupAllProjects()" class="w-full px-4 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors shadow-md">
-                                    Create & Download Backup
+                                    Create & Download Local Backup
                                 </button>
+                            </div>
+                            <div class="p-4 bg-slate-100 dark:bg-slate-700/50 rounded-lg">
+                                <h3 class="font-semibold mb-2 text-slate-800 dark:text-slate-200">GitHub Repositories Backup</h3>
+                                <p class="text-sm text-slate-600 dark:text-slate-400 mb-4">Download a .zip archive of all your personal repositories from GitHub. Requires a GitHub Token to be set in General settings.</p>
+                                <button id="backup-github-btn" onclick="backupGitHubRepos()" class="w-full px-4 py-2 bg-gray-800 text-white font-semibold rounded-lg hover:bg-gray-900 dark:bg-sky-500 dark:hover:bg-sky-600 transition-colors shadow-md">
+                                    Create & Download GitHub Backup
+                                </button>
+                                <p class="text-xs text-center text-slate-500 mt-3">Powered by <a href="https://gitvault.app/" target="_blank" class="text-blue-500 hover:underline">GitVault</a></p>
                             </div>
                         </div>
                         
@@ -351,7 +371,7 @@
                                     <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Display Name</label><input type="text" data-key="displayName" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" value="${siteSettings.displayName || item.name}"></div>
                                     <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Logo Path</label><input type="text" data-key="logoPath" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" value="${siteSettings.logoPath || ''}" placeholder="/${item.name}/logo.png"></div>
                                 </div>
-                                <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Description</label><textarea data-key="description" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">${siteSettings.description || ''}</textarea></div>
+                                <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Description</label><textarea data-key="description" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Fallback description if GitHub repo is not set or has no description.">${siteSettings.description || ''}</textarea></div>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">External Link URL</label><input type="url" data-key="externalLink" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" value="${siteSettings.externalLink || ''}" placeholder="https://example.com"></div>
                                     <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">External Link Title</label><input type="text" data-key="externalLinkTitle" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" value="${siteSettings.externalLinkTitle || ''}" placeholder="Visit Live Site"></div>
@@ -385,31 +405,39 @@
          * Saves all settings from the modal to the server.
          */
         async function saveAllSettings() {
-            const newSettings = {
-                websites: {},
-                websitesOrder: [],
-                theme: allSettings.theme,
-                geminiApiKey: document.getElementById('geminiApiKey')?.value || '',
-                chatbotContext: document.getElementById('chatbotContext')?.value || ''
-            };
+            // Start with a copy of existing settings to preserve theme, etc.
+            const newSettings = { ...allSettings };
+
+            // Update general settings
+            newSettings.geminiApiKey = document.getElementById('geminiApiKey')?.value || '';
+            newSettings.githubToken = document.getElementById('githubToken')?.value || '';
+            newSettings.chatbotContext = document.getElementById('chatbotContext')?.value || '';
 
             localStorage.setItem('geminiApiKey', newSettings.geminiApiKey);
+
+            // Reset website-specific settings before rebuilding them
+            newSettings.websites = newSettings.websites || {};
+            newSettings.websitesOrder = [];
 
             document.querySelectorAll('#website-list-container > .settings-item').forEach(div => {
                 const name = div.dataset.name;
                 newSettings.websitesOrder.push(name);
-                if (!newSettings.websites[name]) {
-                    newSettings.websites[name] = {};
-                }
+
+                // **BUG FIX**: Preserve existing settings (like AI tags) by starting with them.
+                const existingSiteSettings = allSettings.websites[name] || {};
+                newSettings.websites[name] = { ...existingSiteSettings };
+
+                // Then, update with values from the form fields.
                 div.querySelectorAll('input, textarea').forEach(input => {
                     const key = input.dataset.key;
-                    const value = input.type === 'checkbox' ? input.checked : input.value;
-                    newSettings.websites[name][key] = value;
+                    if (key) { // Ensure the element has a data-key attribute
+                        const value = input.type === 'checkbox' ? input.checked : input.value;
+                        newSettings.websites[name][key] = value;
+                    }
                 });
             });
 
             try {
-                console.log("Saving settings:", newSettings);
                 const response = await fetch('browser.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -421,9 +449,11 @@
                     location.reload();
                 } else {
                     console.error('Failed to save settings:', result.error || 'Unknown error');
+                    alert(`Failed to save settings: ${result.error || 'Unknown error'}`);
                 }
             } catch (error) {
                 console.error('Error saving settings:', error.message);
+                alert(`Error saving settings: ${error.message}`);
             }
         }
 
@@ -469,7 +499,10 @@
 
             const siteSettings = allSettings.websites[siteData.name] || {};
             const displayName = siteSettings.displayName || siteData.name;
-            const description = siteSettings.description || 'A local development project.';
+            
+            // **DESCRIPTION LOGIC**: Prioritize GitHub description, then manual, then default.
+            const description = siteSettings.githubDescription || siteSettings.description || 'A local development project.';
+            
             const tags = siteSettings.tags || [];
 
             // --- Logo Logic ---
@@ -515,8 +548,9 @@
 
             buttonsHtml = mainButtonHtml;
             if (iconButtonsHtml) {
-                buttonsHtml += `<div class="flex items-center gap-2">${iconButtonsHtml}</div>`;
+                buttonsHtml = `<div class="flex items-center gap-2">${mainButtonHtml}${iconButtonsHtml}</div>`;
             }
+
 
             let footerHtml = '';
             if (buttonsHtml) {
@@ -548,6 +582,78 @@
         }
 
         /**
+         * Fetches descriptions and topics (tags) from GitHub for projects that have a repo link.
+         */
+        async function fetchGitHubDataForProjects() {
+            const token = allSettings.githubToken;
+            if (!token) {
+                console.warn("GitHub token not set. Skipping GitHub data fetch.");
+                return;
+            }
+
+            const promises = [];
+            const siteNamesWithLinks = [];
+
+            if (!allSettings.websites) {
+                allSettings.websites = {};
+            }
+
+            for (const siteName in allSettings.websites) {
+                const site = allSettings.websites[siteName];
+                if (site && site.githubLink) {
+                    const match = site.githubLink.match(/github\.com\/([^\/]+\/[^\/]+)/);
+                    if (match && match[1]) {
+                        const repoPath = match[1].replace('.git', '');
+                        const url = `https://api.github.com/repos/${repoPath}`;
+                        promises.push(
+                            fetch(url, {
+                                headers: { 'Authorization': `token ${token}` }
+                            }).then(res => {
+                                if (!res.ok) {
+                                    return Promise.reject(new Error(`GitHub API Error: ${res.status} ${res.statusText}`));
+                                }
+                                return res.json();
+                            })
+                        );
+                        siteNamesWithLinks.push(siteName);
+                    }
+                }
+            }
+
+            if (promises.length === 0) return;
+
+            const results = await Promise.allSettled(promises);
+
+            results.forEach((result, index) => {
+                const siteName = siteNamesWithLinks[index];
+                if (!allSettings.websites[siteName]) {
+                    allSettings.websites[siteName] = {};
+                }
+
+                if (result.status === 'fulfilled') {
+                    const repoData = result.value;
+                    
+                    if (repoData.description) {
+                        allSettings.websites[siteName].githubDescription = repoData.description;
+                    } else {
+                        delete allSettings.websites[siteName].githubDescription;
+                    }
+                    
+                    if (repoData.topics && repoData.topics.length > 0) {
+                        allSettings.websites[siteName].tags = repoData.topics;
+                    } else {
+                        delete allSettings.websites[siteName].tags;
+                    }
+                } else {
+                    console.warn(`Failed to fetch GitHub data for ${siteName}:`, result.reason.message);
+                    delete allSettings.websites[siteName].githubDescription;
+                    delete allSettings.websites[siteName].tags;
+                }
+            });
+        }
+
+
+        /**
          * Renders the main page content.
          */
         async function renderPage() {
@@ -555,6 +661,9 @@
             if (!websitesGrid) return;
 
             websitesGrid.innerHTML = '<p class="text-slate-500 dark:text-slate-400 col-span-full">Loading projects...</p>';
+            
+            await fetchGitHubDataForProjects();
+            
             try {
                 const items = await fetchFromBackend('action=list&path=/');
                 if (items && !items.error) {
@@ -870,25 +979,33 @@
             modal.className = 'fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn';
             modal.innerHTML = `
                 <div class="modal-content bg-white dark:bg-slate-800 rounded-lg shadow-2xl w-full max-w-6xl h-[90vh] flex flex-col animate-scaleIn">
-                    <div class="flex justify-between items-center p-4 border-b border-slate-200 dark:border-slate-700">
+                    <div class="flex-shrink-0 flex justify-between items-center p-4 border-b border-slate-200 dark:border-slate-700">
                         <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Refactoring Suggestions</h2>
                         <button class="text-slate-500 hover:text-blue-500 transition-colors" onclick="this.closest('.fixed').remove()">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                         </button>
                     </div>
-                    <div class="flex-grow grid grid-cols-1 md:grid-cols-2 gap-4 p-4" style="min-height: 0;">
-                        <div class="flex flex-col" style="min-height: 0;">
-                            <h3 class="font-semibold mb-2">Original Code</h3>
-                            <div class="flex-grow bg-slate-100 dark:bg-slate-900 rounded-lg overflow-auto p-2"><pre class="text-sm whitespace-pre-wrap"><code>${escapeHtml(originalCode)}</code></pre></div>
+                    
+                    <div class="flex-grow flex flex-col p-4 overflow-hidden gap-4">
+                        <!-- Code Comparison Section -->
+                        <div class="h-2/3 grid grid-cols-1 md:grid-cols-2 gap-4" style="min-height: 0;">
+                            <div class="flex flex-col" style="min-height: 0;">
+                                <h3 class="font-semibold mb-2">Original Code</h3>
+                                <div class="flex-grow bg-slate-100 dark:bg-slate-900 rounded-lg overflow-auto p-2"><pre class="text-sm whitespace-pre-wrap"><code>${escapeHtml(originalCode)}</code></pre></div>
+                            </div>
+                            <div class="flex flex-col" style="min-height: 0;">
+                                <h3 class="font-semibold mb-2">Refactored Code</h3>
+                                <div class="flex-grow bg-slate-100 dark:bg-slate-900 rounded-lg overflow-auto p-2"><pre class="text-sm whitespace-pre-wrap"><code>${escapeHtml(refactoredCode)}</code></pre></div>
+                            </div>
                         </div>
-                        <div class="flex flex-col" style="min-height: 0;">
-                            <h3 class="font-semibold mb-2">Refactored Code</h3>
-                            <div class="flex-grow bg-slate-100 dark:bg-slate-900 rounded-lg overflow-auto p-2"><pre class="text-sm whitespace-pre-wrap"><code>${escapeHtml(refactoredCode)}</code></pre></div>
+                        
+                        <!-- Explanation Section -->
+                        <div class="h-1/3 flex flex-col border-t border-slate-200 dark:border-slate-700 pt-4" style="min-height: 0;">
+                            <h3 class="font-semibold mb-2">Explanation of Changes</h3>
+                            <div class="flex-grow bg-slate-100 dark:bg-slate-900 rounded-lg overflow-auto p-2">
+                                <div class="text-sm prose dark:prose-invert max-w-none">${isRefactored ? explanation : '<p>No changes were needed. The original code is already well-structured.</p>'}</div>
+                            </div>
                         </div>
-                    </div>
-                    <div class="p-4 border-t border-slate-200 dark:border-slate-700 max-h-48 overflow-y-auto">
-                        <h3 class="font-semibold mb-2">Explanation of Changes</h3>
-                        <div class="text-sm prose dark:prose-invert">${isRefactored ? explanation : '<p>No changes were needed. The original code is already well-structured.</p>'}</div>
                     </div>
                 </div>
             `;
@@ -922,71 +1039,26 @@
             
             return { fileList, fileContents: fileContents.join('\n\n') };
         }
-        
-        async function summarizeAllProjects() {
-            const apiKey = allSettings.geminiApiKey;
-            if (!apiKey) {
-                alert('Please set your Gemini API Key in the settings first.');
-                return;
-            }
 
-            const btn = document.getElementById('summarize-all-btn');
+        async function refreshAllGitHubData() {
+            const btn = document.getElementById('refresh-github-btn');
+            if (!btn) return;
+
             const originalBtnText = btn.innerHTML;
             btn.disabled = true;
+            btn.innerHTML = '<span class="animate-pulse">Refreshing...</span>';
 
-            const projectDivs = document.querySelectorAll('#website-list-container .settings-item');
-            const projectNames = Array.from(projectDivs).map(div => div.dataset.name);
-            
-            for (let i = 0; i < projectNames.length; i++) {
-                const projectName = projectNames[i];
-                btn.innerHTML = `<span class="animate-pulse">Summarizing ${i + 1} of ${projectNames.length}: ${projectName}...</span>`;
-                try {
-                    await summarizeSingleProject(projectName);
-                } catch (error) {
-                    console.error(`Failed to summarize ${projectName}:`, error);
-                    alert(`Failed to summarize ${projectName}. Check console for details.`);
-                    btn.innerHTML = originalBtnText;
-                    btn.disabled = false;
-                    return;
-                }
+            try {
+                await fetchGitHubDataForProjects();
+                await saveAllSettingsAndReload();
+            } catch (error) {
+                console.error('Failed to refresh GitHub data:', error);
+                alert('Failed to refresh GitHub data. Check the console for details.');
+                btn.disabled = false;
+                btn.innerHTML = originalBtnText;
             }
-
-            btn.innerHTML = 'Saving...';
-            await saveAllSettingsAndReload();
         }
-
-        async function summarizeSingleProject(projectName) {
-            const { fileList, fileContents } = await getProjectContext(projectName);
-
-            const prompt = `
-                Analyze the following file structure and file contents for a web project named "${projectName}".
-                Provide a response in JSON format with two keys:
-                1. "description": A single, concise sentence (under 15 words) describing the project's purpose.
-                2. "tags": An array of 3-5 relevant technology tags (e.g., "React", "PHP", "Portfolio", "API", "Game").
-            `;
-
-            const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${allSettings.geminiApiKey}`;
-            const response = await fetch(API_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    contents: [{ parts: [{ text: prompt }] }],
-                    generationConfig: { responseMimeType: "application/json" }
-                })
-            });
-
-            if (!response.ok) throw new Error(`API Error: ${response.status}`);
-            
-            const result = await response.json();
-            const summaryJson = JSON.parse(result.candidates[0].content.parts[0].text);
-            
-            if (!allSettings.websites[projectName]) {
-                allSettings.websites[projectName] = {};
-            }
-            allSettings.websites[projectName].description = summaryJson.description;
-            allSettings.websites[projectName].tags = summaryJson.tags;
-        }
-
+        
         async function saveAllSettingsAndReload() {
              try {
                 const response = await fetch('browser.php', {
@@ -1011,16 +1083,129 @@
             btn.disabled = true;
             btn.innerHTML = '<span class="animate-pulse">Creating backup...</span>';
             
-            // The download is initiated by navigating to the URL.
-            // The browser will handle the file download dialog.
             window.location.href = 'browser.php?action=backup_all';
 
-            // Reset the button after a short delay.
             setTimeout(() => {
                 btn.disabled = false;
                 btn.innerHTML = originalBtnText;
             }, 3000);
         }
+
+        // --- GitHub Backup Functions (from GitVault logic) ---
+
+        const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+        function createApiHeaders(token) {
+            const headers = new Headers();
+            headers.append('Authorization', `Bearer ${token}`);
+            headers.append('Accept', 'application/vnd.github+json');
+            return headers;
+        }
+
+        async function fetchWithRetry(fn, retries, delayMs, repoName) {
+            let lastError;
+            for (let i = 0; i < retries; i++) {
+                try {
+                    return await fn();
+                } catch (error) {
+                    lastError = error;
+                    console.warn(`   -> For ${repoName}, attempt ${i + 1} failed. Retrying in ${delayMs / 1000}s...`);
+                    await delay(delayMs);
+                }
+            }
+            throw lastError;
+        }
+
+        async function fetchAllGitHubRepos(token) {
+            let allRepos = [];
+            let page = 1;
+            let hasNextPage = true;
+            while (hasNextPage) {
+                const apiUrl = `${PROXY_URL}https://api.github.com/user/repos?type=all&per_page=100&page=${page}`;
+                const response = await fetch(apiUrl, { headers: createApiHeaders(token) });
+                if (!response.ok) throw new Error(`GitHub API error: ${response.status} ${response.statusText}`);
+                const repos = await response.json();
+                if (repos.length === 0) {
+                    hasNextPage = false;
+                } else {
+                    const repoData = repos.map(repo => ({
+                        name: repo.full_name.replace('/', '_'),
+                        url: repo.url
+                    }));
+                    allRepos = allRepos.concat(repoData);
+                    page++;
+                }
+            }
+            return allRepos;
+        }
+
+        async function fetchBinary(url, token) {
+            const proxiedUrl = `${PROXY_URL}${url}`;
+            const response = await fetch(proxiedUrl, { headers: createApiHeaders(token) });
+            if (!response.ok) throw new Error(`(${response.status}) Failed to download file`);
+            return await response.blob();
+        }
+
+        async function backupGitHubRepos() {
+            const btn = document.getElementById('backup-github-btn');
+            const originalBtnText = btn.innerHTML;
+            const token = allSettings.githubToken;
+
+            if (!token) {
+                alert('Please set your GitHub Token in the General settings tab first.');
+                return;
+            }
+
+            btn.disabled = true;
+
+            try {
+                btn.innerHTML = '<span class="animate-pulse">Fetching repository list...</span>';
+                const repos = await fetchAllGitHubRepos(token);
+                
+                if (repos.length === 0) {
+                    alert('No repositories found for your account.');
+                    btn.disabled = false;
+                    btn.innerHTML = originalBtnText;
+                    return;
+                }
+
+                const zip = new JSZip();
+                let downloadedCount = 0;
+                const totalRepos = repos.length;
+
+                for (let i = 0; i < totalRepos; i++) {
+                    const repo = repos[i];
+                    btn.innerHTML = `<span class="animate-pulse">Downloading ${i + 1}/${totalRepos}: ${repo.name}...</span>`;
+                    
+                    try {
+                        const zipballUrl = `${repo.url}/zipball`;
+                        const repoZipBlob = await fetchWithRetry(() => fetchBinary(zipballUrl, token), 3, 1000, repo.name);
+                        zip.file(`${repo.name}.zip`, repoZipBlob);
+                        downloadedCount++;
+                    } catch (error) {
+                        console.error(`Failed to download ${repo.name} after multiple attempts. Skipping. Reason: ${error.message}`);
+                        zip.file(`${repo.name}-DOWNLOAD_FAILED.txt`, `Could not download this repository. It might be empty or protected.`);
+                    }
+                }
+
+                if (downloadedCount > 0) {
+                    btn.innerHTML = '<span class="animate-pulse">Compressing backup...</span>';
+                    const content = await zip.generateAsync({ type: "blob" });
+                    const date = new Date().toISOString().slice(0, 10);
+                    saveAs(content, `github-backup-${date}.zip`);
+                } else {
+                     alert('Backup failed: No repositories could be downloaded.');
+                }
+
+            } catch (error) {
+                console.error('GitHub backup failed:', error);
+                alert(`An error occurred during the GitHub backup: ${error.message}`);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalBtnText;
+            }
+        }
+
 
         document.addEventListener('DOMContentLoaded', async function() {
             const styleSheet = document.createElement("style");
@@ -1061,7 +1246,7 @@
                 }
             });
             
-            renderPage();
+            await renderPage();
         });
     </script>
 </body>
