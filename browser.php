@@ -2,21 +2,36 @@
 // Set the content type to JSON for all responses.
 header('Content-Type: application/json');
 
-// --- Handle POST requests for saving settings ---
+// --- Handle POST requests ---
 $input = json_decode(file_get_contents('php://input'), true);
 
-if (isset($input['action']) && $input['action'] === 'save_settings') {
-    $settings_file = __DIR__ . '/settings.json';
-    
-    // Attempt to write the settings to the file.
-    if (file_put_contents($settings_file, json_encode($input['settings'], JSON_PRETTY_PRINT))) {
-        echo json_encode(['success' => true]);
-    } else {
-        // If writing fails, send a server error response.
-        header('HTTP/1.1 500 Internal Server Error');
-        echo json_encode(['success' => false, 'error' => 'Unable to write to settings.json. Check file permissions.']);
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($input['action'])) {
+    switch ($input['action']) {
+        case 'save_settings':
+            $settings_file = __DIR__ . '/settings.json';
+            if (file_put_contents($settings_file, json_encode($input['settings'], JSON_PRETTY_PRINT))) {
+                echo json_encode(['success' => true]);
+            } else {
+                header('HTTP/1.1 500 Internal Server Error');
+                echo json_encode(['success' => false, 'error' => 'Unable to write to settings.json. Check file permissions.']);
+            }
+            break;
+        
+        case 'save_content':
+            $savePath = realpath(__DIR__ . '/' . $input['path']);
+            if ($savePath && strpos($savePath, __DIR__) === 0) {
+                if (file_put_contents($savePath, $input['content']) !== false) {
+                    echo json_encode(['success' => true]);
+                } else {
+                    header('HTTP/1.1 500 Internal Server Error');
+                    echo json_encode(['success' => false, 'error' => 'Unable to write to file. Check permissions.']);
+                }
+            } else {
+                header('HTTP/1.1 403 Forbidden');
+                echo json_encode(['error' => 'Access Denied']);
+            }
+            break;
     }
-    // Stop the script after handling the save action.
     exit;
 }
 
@@ -52,11 +67,14 @@ switch ($action) {
     case 'backup_all':
         backupAllProjects($rootDir);
         break;
-    case 'list_recursive':
-        listRecursive($absolutePath);
+    case 'list_recursive_tree':
+        echo json_encode(getDirectoryTree($absolutePath));
         break;
     case 'get_content':
         getFileContentAsJson($absolutePath);
+        break;
+    case 'get_project_details':
+        getProjectDetails($absolutePath);
         break;
     case 'list':
         listFilesAsJson($absolutePath);
@@ -130,33 +148,35 @@ function backupAllProjects($rootDir) {
     exit;
 }
 
-
 /**
- * Lists the contents of a directory recursively and returns a JSON response.
- * @param string $directoryPath The absolute path to the directory.
+ * Builds a nested array representing a directory tree.
+ * @param string $dir The directory path.
+ * @return array The directory tree.
  */
-function listRecursive($directoryPath) {
-    if (!is_dir($directoryPath)) {
-        echo json_encode(['error' => 'Not a directory']);
-        exit;
-    }
-    $items = [];
-    $iterator = new RecursiveIteratorIterator(
-        new RecursiveDirectoryIterator($directoryPath, RecursiveDirectoryIterator::SKIP_DOTS),
-        RecursiveIteratorIterator::SELF_FIRST
-    );
-    foreach ($iterator as $file) {
-        if ($file->isFile()) {
-            // Get path relative to the initial directory to keep it clean.
-            $relativePath = str_replace($directoryPath . DIRECTORY_SEPARATOR, '', $file->getRealPath());
-            $items[] = [
-                'name' => $relativePath,
-                'type' => 'file'
-            ];
+function getDirectoryTree($dir) {
+    $result = [];
+    $items = scandir($dir);
+    foreach ($items as $key => $value) {
+        if (!in_array($value, [".", ".."])) {
+            $path = $dir . DIRECTORY_SEPARATOR . $value;
+            if (is_dir($path)) {
+                $result[] = [
+                    'name' => $value,
+                    'type' => 'folder',
+                    'children' => getDirectoryTree($path)
+                ];
+            } else {
+                $result[] = [
+                    'name' => $value,
+                    'type' => 'file',
+                    'path' => str_replace(__DIR__ . '/', '', $path)
+                ];
+            }
         }
     }
-    echo json_encode($items);
+    return $result;
 }
+
 
 /**
  * Lists the contents of a directory (non-recursively) as a JSON response.
@@ -216,5 +236,57 @@ function getFileContentAsJson($filePath) {
     }
 
     echo json_encode(['success' => true, 'content' => $content]);
+}
+
+/**
+ * Gathers details about a project like dependencies and Git status.
+ * @param string $projectPath The absolute path to the project directory.
+ */
+function getProjectDetails($projectPath) {
+    $details = [
+        'dependencies' => [],
+        'git' => null
+    ];
+
+    // Check for package.json
+    $packageJsonPath = $projectPath . '/package.json';
+    if (file_exists($packageJsonPath)) {
+        $content = json_decode(file_get_contents($packageJsonPath), true);
+        if ($content) {
+            $deps = array_merge($content['dependencies'] ?? [], $content['devDependencies'] ?? []);
+            if (!empty($deps)) {
+                $details['dependencies'][] = ['type' => 'NPM', 'count' => count($deps)];
+            }
+        }
+    }
+
+    // Check for composer.json
+    $composerJsonPath = $projectPath . '/composer.json';
+    if (file_exists($composerJsonPath)) {
+        $content = json_decode(file_get_contents($composerJsonPath), true);
+        if ($content) {
+            $deps = array_merge($content['require'] ?? [], $content['require-dev'] ?? []);
+            if (!empty($deps)) {
+                $details['dependencies'][] = ['type' => 'Composer', 'count' => count($deps)];
+            }
+        }
+    }
+    
+    // Check for Git repository
+    $gitPath = $projectPath . '/.git';
+    if (file_exists($gitPath)) {
+        $details['git'] = [];
+        // Get current branch
+        $head = file_get_contents($gitPath . '/HEAD');
+        $branch = trim(str_replace('ref: refs/heads/', '', $head));
+        $details['git']['branch'] = $branch;
+
+        // Get status (a simple check for uncommitted changes)
+        $output = [];
+        exec("cd " . escapeshellarg($projectPath) . " && git status --porcelain", $output);
+        $details['git']['hasChanges'] = !empty($output);
+    }
+
+    echo json_encode($details);
 }
 ?>
